@@ -433,7 +433,10 @@ AC_CHECK_DEFINE([INADDR_NONE], [netinet/in.h], [],
 
 #### POSIX threads ####
 
+# Win32 build breaks with win32 pthread installed
+if test "x$os_is_win32" != "x1" ; then
 ACX_PTHREAD
+fi
 
 #### Check for libs ####
 
