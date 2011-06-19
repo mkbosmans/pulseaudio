@@ -71,7 +71,11 @@ pa_client_conf *pa_client_conf_new(void) {
     pa_client_conf *c = pa_xmemdup(&default_conf, sizeof(default_conf));
 
     c->daemon_binary = pa_xstrdup(PA_BINARY);
+#ifdef OS_IS_WIN32
+    c->extra_arguments = pa_xstrdup("--log-target=windbg");
+#else
     c->extra_arguments = pa_xstrdup("--log-target=syslog");
+#endif
     c->cookie_file = pa_xstrdup(PA_NATIVE_COOKIE_FILE);
 
     return c;

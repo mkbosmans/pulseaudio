@@ -426,6 +426,15 @@ void pa_log_levelv_meta(
 
                 break;
             }
+#ifdef OS_IS_WIN32
+            case PA_LOG_WINDBG: {
+                char metadata[256];
+
+                pa_snprintf(metadata, sizeof(metadata), "\n%c %s %s", level_to_char[level], timestamp, location);
+                OutputDebugStringA(metadata);
+                break;
+            }
+#endif
             case PA_LOG_NULL:
             default:
                 break;

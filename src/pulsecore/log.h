@@ -37,6 +37,7 @@ typedef enum pa_log_target {
     PA_LOG_SYSLOG,
     PA_LOG_NULL,    /* to /dev/null */
     PA_LOG_FD,      /* to a file descriptor, e.g. a char device */
+    PA_LOG_WINDBG,  /* log to windows debug buffer */
     PA_LOG_TARGET_MAX
 } pa_log_target_t;
 

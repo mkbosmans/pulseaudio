@@ -145,7 +145,11 @@ void pa_cmdline_help(const char *argv0) {
            "                                        this time passed\n"
            "      --log-level[=LEVEL]               Increase or set verbosity level\n"
            "  -v                                    Increase the verbosity level\n"
+#ifdef OS_IS_WIN32
+           "      --log-target={auto,windbg,stderr,file:PATH}\n"
+#else
            "      --log-target={auto,syslog,stderr,file:PATH}\n"
+#endif
            "                                        Specify the log target\n"
            "      --log-meta[=BOOL]                 Include code location in log messages\n"
            "      --log-time[=BOOL]                 Include timestamps in log messages\n"
@@ -319,7 +323,11 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
 
             case ARG_LOG_TARGET:
                 if (pa_daemon_conf_set_log_target(conf, optarg) < 0) {
+#ifdef OS_IS_WIN32
+                    pa_log(_("Invalid log target: use either 'windbg', 'stderr' or 'auto' or a valid file name 'file:<path>'."));
+#else
                     pa_log(_("Invalid log target: use either 'syslog', 'stderr' or 'auto' or a valid file name 'file:<path>'."));
+#endif
                     goto fail;
                 }
                 break;

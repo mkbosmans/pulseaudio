@@ -811,8 +811,13 @@ int main(int argc, char *argv[]) {
         daemon_pipe[0] = -1;
 #endif
 
-        if (conf->auto_log_target)
+        if (conf->auto_log_target) {
+#ifdef OS_IS_WIN32
+            pa_log_set_target(PA_LOG_WINDBG);
+#else
             pa_log_set_target(PA_LOG_SYSLOG);
+#endif
+        }
 
 #ifdef HAVE_SETSID
         if (setsid() < 0) {
