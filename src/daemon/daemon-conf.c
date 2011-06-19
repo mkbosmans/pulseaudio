@@ -181,7 +181,7 @@ int pa_daemon_conf_set_log_target(pa_daemon_conf *c, const char *string) {
 
     if (!strcmp(string, "auto")) {
         c->auto_log_target = 1;
-#ifndef OS_IS_WIN32
+#ifdef OS_IS_WIN32
     } else if (!strcmp(string, "windbg")) {
         c->auto_log_target = 0;
         c->log_target = PA_LOG_WINDBG;
