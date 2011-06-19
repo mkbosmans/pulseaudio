@@ -428,10 +428,17 @@ void pa_log_levelv_meta(
             }
 #ifdef OS_IS_WIN32
             case PA_LOG_WINDBG: {
-                char metadata[256];
-
-                pa_snprintf(metadata, sizeof(metadata), "\n%c %s %s", level_to_char[level], timestamp, location);
-                OutputDebugStringA(metadata);
+                char *local_t;
+                char *line;
+                /* We shouldn't be using dynamic allocation here to
+                 * minimize the hit in RT threads */
+                if ((local_t = pa_utf8_to_locale(t)))
+                    t = local_t;
+                /* No timestamp, as windows debug buffer facility already provides one */
+                line = pa_sprintf_malloc("%c %s %s", level_to_char[level], location, t);
+                OutputDebugStringA(line);
+                pa_xfree(line);
+                pa_xfree(local_t);
                 break;
             }
 #endif
