@@ -54,7 +54,9 @@ AC_PATH_PROG(INTLTOOL_UPDATE, [intltool-update])
 AC_PATH_PROG(INTLTOOL_MERGE, [intltool-merge])
 AC_PATH_PROG(INTLTOOL_EXTRACT, [intltool-extract])
 if test -z "$INTLTOOL_UPDATE" -o -z "$INTLTOOL_MERGE" -o -z "$INTLTOOL_EXTRACT"; then
-    AC_MSG_ERROR([The intltool scripts were not found. Please install intltool.])
+    if test "$USE_NLS" = "yes" ; then
+        AC_MSG_ERROR([The intltool scripts were not found. Please install intltool.])
+    fi
 fi
 
   INTLTOOL_DESKTOP_RULE='%.desktop:   %.desktop.in   $(INTLTOOL_MERGE) $(wildcard $(top_srcdir)/po/*.po) ; LC_ALL=C $(INTLTOOL_MERGE) -d -u -c $(top_builddir)/po/.intltool-merge-cache $(top_srcdir)/po $< [$]@'
