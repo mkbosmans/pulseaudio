@@ -555,7 +555,14 @@ IT_PROG_INTLTOOL([0.35.0])
 GETTEXT_PACKAGE=pulseaudio
 AC_SUBST([GETTEXT_PACKAGE])
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[Gettext package])
-AM_GLIB_GNU_GETTEXT
+
+dnl AM_GLIB_GNU_GETTEXT has a nasty side effect:
+dnl If it finds a working GNU gettext, it always
+dnl sets USE_NLS=yes. This obviously renders the
+dnl option --disable-nls useless.
+dnl So: invoke it conditionally.
+AS_IF([test x$USE_NLS = xyes],
+      [AM_GLIB_GNU_GETTEXT])
 
 pulselocaledir='${prefix}/${DATADIRNAME}/locale'
 AC_SUBST(pulselocaledir)
