@@ -85,6 +85,145 @@ static void remap_mono_to_stereo_c(pa_remap_t *m, void *dst, const void *src, un
     }
 }
 
+static void remap_stereo_to_mono_c(pa_remap_t *m, void *dst, const void *src, unsigned n) {
+    unsigned i;
+
+    pa_assert(m->i_ss->channels == 2);
+    pa_assert(m->o_ss->channels == 1);
+
+    switch (*m->format) {
+        case PA_SAMPLE_FLOAT32NE:
+        {
+            float *d = (float *)dst;
+            float *s = (float *)src;
+
+            for (i = n; i; i--, s += 2, d += 1)
+                *d = (s[0] + s[1]) * 0.5;
+
+            break;
+        }
+        case PA_SAMPLE_S16NE:
+        {
+            int16_t *d = (int16_t *)dst;
+            int16_t *s = (int16_t *)src;
+
+            for (i = n; i; i--, s += 2, d += 1)
+                *d = (s[0] >> 1) + (s[1] >> 1);
+
+            break;
+        }
+        default:
+            pa_assert_not_reached();
+    }
+}
+
+static void remap_stereo_to_nchannels_c(pa_remap_t *m, void *dst, const void *src, unsigned n) {
+    unsigned oc, i;
+    unsigned n_ic, n_oc;
+
+    n_ic = m->i_ss->channels;
+    n_oc = m->o_ss->channels;
+
+    pa_assert(n_ic == 2);
+
+    switch (*m->format) {
+        case PA_SAMPLE_FLOAT32NE:
+        {
+            float *d, *s;
+
+            for (oc = 0; oc < n_oc; oc++) {
+                float vol_l, vol_r;
+
+                vol_l = m->map_table_f[oc][0];
+                vol_r = m->map_table_f[oc][1];
+
+                d = (float *)dst + oc;
+                s = (float *)src;
+
+                if (vol_l <= 0.0 && vol_r <= 0.0) {
+                    for (i = n; i > 0; i--, s += n_ic, d += n_oc)
+                        *d = 0.0;
+                } else if ((vol_l >= 1.0 && vol_r <= 0.0) ||            /* Exactly one of the channels */
+                           (vol_r >= 1.0 && vol_l <= 0.0)) {
+                    if (vol_l >= 1.0 && vol_r <= 0.0)                       /* left channel */
+                        s += 0;
+                    else if (vol_l <= 0.0 && vol_r >= 1.0)                  /* right channel */
+                        s += 1;
+                    for (i = n >> 2; i; i--) {
+                        d[0*n_oc] = s[0];
+                        d[1*n_oc] = s[2];
+                        d[2*n_oc] = s[4];
+                        d[3*n_oc] = s[6];
+                        s += 4*n_ic;
+                        d += 4*n_oc;
+                    }
+                    for (i = n & 3; i; i--) {
+                        d[0] = s[0];
+                        s += n_ic;
+                        d += n_oc;
+                    }
+                } else if ((m->map_table_i[oc][0] == 0x08000 && m->map_table_i[oc][1] == 0x08000)) {
+                    for (i = n; i; i--, s += n_ic, d += n_oc)
+                        *d = (s[0] + s[1]) * 0.5;
+                } else {                                                /* Mix left and right channel */
+                    for (i = n; i; i--, s += n_ic, d += n_oc)
+                        *d = s[0] * vol_l + s[1] * vol_r;
+                }
+
+            }
+            break;
+        }
+        case PA_SAMPLE_S16NE:
+        {
+            int16_t *d, *s;
+
+            for (oc = 0; oc < n_oc; oc++) {
+                int32_t vol_l, vol_r;
+
+                vol_l = m->map_table_i[oc][0];
+                vol_r = m->map_table_i[oc][1];
+
+                d = (int16_t *)dst + oc;
+                s = (int16_t *)src;
+
+                if (vol_l <= 0 && vol_r <= 0) {
+                    for (i = n; i > 0; i--, s += n_ic, d += n_oc)
+                        *d = 0;
+                } else if ((vol_l >= 0x10000 && vol_r <= 0) ||          /* Exactly one of the channels */
+                           (vol_r >= 0x10000 && vol_l <= 0)) {
+                    if (vol_l >= 0x10000 && vol_r <= 0)                     /* left channel */
+                        s += 0;
+                    else if (vol_l <= 0 && vol_r >= 0x10000)                /* right channel */
+                        s += 1;
+                    for (i = n >> 2; i; i--) {
+                        d[0*n_oc] = s[0];
+                        d[1*n_oc] = s[2];
+                        d[2*n_oc] = s[4];
+                        d[3*n_oc] = s[6];
+                        s += 4*n_ic;
+                        d += 4*n_oc;
+                    }
+                    for (i = n & 3; i; i--) {
+                        d[0] = s[0];
+                        s += n_ic;
+                        d += n_oc;
+                    }
+                } else if ((vol_l == 0x08000 && vol_r == 0x08000)) {
+                    for (i = n; i; i--, s += n_ic, d += n_oc)
+                        *d = (s[0] >> 1) + (s[1] >> 1);
+                } else {                                                /* Mix left and right channel */
+                    for (i = n; i; i--, s += n_ic, d += n_oc)
+                        *d = (int16_t) (((int32_t) s[0] * vol_l + (int32_t) s[1] * vol_r) >> 16);
+                }
+
+            }
+            break;
+        }
+        default:
+            pa_assert_not_reached();
+    }
+}
+
 static void remap_channels_matrix_c(pa_remap_t *m, void *dst, const void *src, unsigned n) {
     unsigned oc, ic, i;
     unsigned n_ic, n_oc;
@@ -171,6 +310,12 @@ static void init_remap_c(pa_remap_t *m) {
             m->map_table_f[0][0] >= 1.0 && m->map_table_f[1][0] >= 1.0) {
         m->do_remap = (pa_do_remap_func_t) remap_mono_to_stereo_c;
         pa_log_info("Using mono to stereo remapping");
+    } else if (n_ic == 2 && n_oc == 1 && m->map_table_i[0][0] == 0x8000 && m->map_table_i[0][1] == 0x8000) {
+        m->do_remap = (pa_do_remap_func_t) remap_stereo_to_mono_c;
+        pa_log_info("Using stereo to mono remapping");
+    } else if (n_ic == 2) {
+        m->do_remap = (pa_do_remap_func_t) remap_stereo_to_nchannels_c;
+        pa_log_info("Using stereo remapping");
     } else {
         m->do_remap = (pa_do_remap_func_t) remap_channels_matrix_c;
         pa_log_info("Using generic matrix remapping");
