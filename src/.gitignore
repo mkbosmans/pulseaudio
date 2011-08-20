@@ -55,6 +55,7 @@ prioq-test
 proplist-test
 queue-test
 remix-test
+remap-test
 resampler-test
 rtpoll-test
 rtstutter

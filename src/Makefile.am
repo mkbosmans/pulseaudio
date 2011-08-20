@@ -237,6 +237,7 @@ TESTS_default = \
 		thread-test \
 		volume-test \
 		mix-test \
+		remap-test \
 		proplist-test \
 		lock-autospawn-test \
 		prioq-test
@@ -467,6 +468,11 @@ remix_test_SOURCES = tests/remix-test.c
 remix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
 remix_test_CFLAGS = $(AM_CFLAGS)
 remix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
+
+remap_test_SOURCES = tests/remap-test.c
+remap_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
+remap_test_CFLAGS = $(AM_CFLAGS)
+remap_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 smoother_test_SOURCES = tests/smoother-test.c
 smoother_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
