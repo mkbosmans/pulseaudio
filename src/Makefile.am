@@ -847,9 +847,15 @@ libpulsecore_@PA_MAJORMINOR@_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version
 libpulsecore_@PA_MAJORMINOR@_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(WINSOCK_LIBS) $(LTLIBICONV) libpulsecommon-@PA_MAJORMINOR@.la libpulse.la libpulsecore-foreign.la
 
 if HAVE_ORC
-ORC_SOURCE += pulsecore/svolume
-libpulsecore_@PA_MAJORMINOR@_la_SOURCES += pulsecore/svolume_orc.c
-nodist_libpulsecore_@PA_MAJORMINOR@_la_SOURCES = pulsecore/svolume-orc-gen.c pulsecore/svolume-orc-gen.h
+ORC_SOURCE += \
+		pulsecore/remap \
+		pulsecore/svolume
+libpulsecore_@PA_MAJORMINOR@_la_SOURCES += \
+		pulsecore/remap_orc.c \
+		pulsecore/svolume_orc.c
+nodist_libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/remap-orc-gen.c pulsecore/remap-orc-gen.h \
+		pulsecore/svolume-orc-gen.c pulsecore/svolume-orc-gen.h
 libpulsecore_@PA_MAJORMINOR@_la_CFLAGS += $(ORC_CFLAGS)
 libpulsecore_@PA_MAJORMINOR@_la_LIBADD += $(ORC_LIBS)
 endif

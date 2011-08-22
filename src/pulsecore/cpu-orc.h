@@ -30,4 +30,6 @@ void pa_cpu_init_orc(pa_cpu_info cpu_info);
 
 void pa_volume_func_init_orc(void);
 
+void pa_remap_func_init_orc(void);
+
 #endif /* foocpuorchfoo */
