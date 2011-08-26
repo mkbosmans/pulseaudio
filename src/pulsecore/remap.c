@@ -224,6 +224,72 @@ static void remap_stereo_to_nchannels_c(pa_remap_t *m, void *dst, const void *sr
     }
 }
 
+static void remap_51_to_stereo_c(pa_remap_t *m, void *dst, const void *src, unsigned n) {
+    unsigned i, n_ic, n_oc;
+
+    n_ic = m->i_ss->channels;
+    n_oc = m->o_ss->channels;
+
+    pa_assert(n_ic == 6);
+    pa_assert(n_oc == 2);
+    pa_assert(m->map_table_i[0][0] == m->map_table_i[1][1]);
+    pa_assert(m->map_table_i[0][2] == m->map_table_i[1][3]);
+    pa_assert(m->map_table_i[0][1] == 0x0000 && m->map_table_i[1][0] == 0x0000);
+    pa_assert(m->map_table_i[0][3] == 0x0000 && m->map_table_i[1][2] == 0x0000);
+    pa_assert(m->map_table_i[0][4] == m->map_table_i[1][4]);
+    pa_assert(m->map_table_i[0][4] == m->map_table_i[0][5]);
+    pa_assert(m->map_table_i[0][4] == m->map_table_i[1][5]);
+
+    switch (*m->format) {
+        case PA_SAMPLE_FLOAT32NE:
+        {
+            float *d, *s;
+            float vol_f, vol_r, vol_m;
+
+            vol_f = m->map_table_f[0][0];
+            vol_r = m->map_table_f[0][2];
+            vol_m = m->map_table_f[0][4];
+
+            d = (float *)dst;
+            s = (float *)src;
+
+            for (i = n; i; i--, s += n_ic, d += n_oc) {
+                d[0] = d[1] = (s[4] + s[5]) * vol_m;
+                d[0] += s[0] * vol_f;
+                d[1] += s[1] * vol_f;
+                d[0] += s[2] * vol_r;
+                d[1] += s[3] * vol_r;
+            }
+
+            break;
+        }
+        case PA_SAMPLE_S16NE:
+        {
+            int16_t *d, *s;
+            int32_t vol_f, vol_r, vol_m;
+
+            vol_f = m->map_table_i[0][0];
+            vol_r = m->map_table_i[0][2];
+            vol_m = m->map_table_i[0][4];
+
+            d = (int16_t *)dst;
+            s = (int16_t *)src;
+
+            for (i = n; i; i--, s += n_ic, d += n_oc) {
+                d[0] = d[1] = (int16_t) ((((int32_t) s[4] + (int32_t) s[5]) * vol_m) >> 16);
+                d[0] += (int16_t) (((int32_t) s[0] * vol_f) >> 16);
+                d[1] += (int16_t) (((int32_t) s[1] * vol_f) >> 16);
+                d[0] += (int16_t) (((int32_t) s[2] * vol_r) >> 16);
+                d[1] += (int16_t) (((int32_t) s[3] * vol_r) >> 16);
+            }
+
+            break;
+        }
+        default:
+            pa_assert_not_reached();
+    }
+}
+
 static void remap_channels_matrix_c(pa_remap_t *m, void *dst, const void *src, unsigned n) {
     unsigned oc, ic, i;
     unsigned n_ic, n_oc;
@@ -316,6 +382,15 @@ static void init_remap_c(pa_remap_t *m) {
     } else if (n_ic == 2) {
         m->do_remap = (pa_do_remap_func_t) remap_stereo_to_nchannels_c;
         pa_log_info("Using stereo remapping");
+    } else if (n_ic == 6 && n_oc == 2 &&
+            m->map_table_i[0][0] == m->map_table_i[1][1] && m->map_table_i[0][2] == m->map_table_i[1][3] &&
+            m->map_table_i[0][1] == 0x0000 && m->map_table_i[1][0] == 0x0000 &&
+            m->map_table_i[0][3] == 0x0000 && m->map_table_i[1][2] == 0x0000 &&
+            m->map_table_i[0][4] == m->map_table_i[1][4] &&
+            m->map_table_i[0][4] == m->map_table_i[0][5] &&
+            m->map_table_i[0][4] == m->map_table_i[1][5]) {
+        m->do_remap = (pa_do_remap_func_t) remap_51_to_stereo_c;
+        pa_log_info("Using 5.1 surround to stereo remapping");
     } else {
         m->do_remap = (pa_do_remap_func_t) remap_channels_matrix_c;
         pa_log_info("Using generic matrix remapping");
