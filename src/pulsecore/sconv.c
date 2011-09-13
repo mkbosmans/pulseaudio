@@ -74,31 +74,31 @@ static void u8_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
 
 /* float32 */
 
-static void float32ne_to_float32ne(unsigned n, const float *a, float *b) {
+static void float32_copy(unsigned n, const float *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
     memcpy(b, a, (int) (sizeof(float) * n));
 }
 
-static void float32re_to_float32ne(unsigned n, const float *a, float *b) {
+static void float32_swap(unsigned n, const float *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *((uint32_t *) b) = PA_UINT32_SWAP(*((uint32_t *) a));
+        *b = PA_FLOAT32_SWAP(*a);
 }
 
 /* s16 */
 
-static void s16ne_to_s16ne(unsigned n, const int16_t *a, int16_t *b) {
+static void s16_copy(unsigned n, const int16_t *a, int16_t *b) {
     pa_assert(a);
     pa_assert(b);
 
     memcpy(b, a, (int) (sizeof(int16_t) * n));
 }
 
-static void s16re_to_s16ne(unsigned n, const int16_t *a, int16_t *b) {
+static void s16_swap(unsigned n, const int16_t *a, int16_t *b) {
     pa_assert(a);
     pa_assert(b);
 
@@ -186,14 +186,14 @@ static pa_convert_func_t to_float32ne_table[] = {
     [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_to_float32ne,
     [PA_SAMPLE_S16LE]     = (pa_convert_func_t) pa_sconv_s16le_to_float32ne,
     [PA_SAMPLE_S16BE]     = (pa_convert_func_t) pa_sconv_s16be_to_float32ne,
+    [PA_SAMPLE_FLOAT32NE] = (pa_convert_func_t) float32_copy,
+    [PA_SAMPLE_FLOAT32RE] = (pa_convert_func_t) float32_swap,
     [PA_SAMPLE_S32LE]     = (pa_convert_func_t) pa_sconv_s32le_to_float32ne,
     [PA_SAMPLE_S32BE]     = (pa_convert_func_t) pa_sconv_s32be_to_float32ne,
     [PA_SAMPLE_S24LE]     = (pa_convert_func_t) pa_sconv_s24le_to_float32ne,
     [PA_SAMPLE_S24BE]     = (pa_convert_func_t) pa_sconv_s24be_to_float32ne,
     [PA_SAMPLE_S24_32LE]  = (pa_convert_func_t) pa_sconv_s24_32le_to_float32ne,
     [PA_SAMPLE_S24_32BE]  = (pa_convert_func_t) pa_sconv_s24_32be_to_float32ne,
-    [PA_SAMPLE_FLOAT32NE] = (pa_convert_func_t) float32ne_to_float32ne,
-    [PA_SAMPLE_FLOAT32RE] = (pa_convert_func_t) float32re_to_float32ne,
 };
 
 pa_convert_func_t pa_get_convert_to_float32ne_function(pa_sample_format_t f) {
@@ -214,18 +214,18 @@ void pa_set_convert_to_float32ne_function(pa_sample_format_t f, pa_convert_func_
 
 static pa_convert_func_t from_float32ne_table[] = {
     [PA_SAMPLE_U8]        = (pa_convert_func_t) u8_from_float32ne,
+    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_from_float32ne,
+    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_from_float32ne,
     [PA_SAMPLE_S16LE]     = (pa_convert_func_t) pa_sconv_s16le_from_float32ne,
     [PA_SAMPLE_S16BE]     = (pa_convert_func_t) pa_sconv_s16be_from_float32ne,
+    [PA_SAMPLE_FLOAT32NE] = (pa_convert_func_t) float32_copy,
+    [PA_SAMPLE_FLOAT32RE] = (pa_convert_func_t) float32_swap,
     [PA_SAMPLE_S32LE]     = (pa_convert_func_t) pa_sconv_s32le_from_float32ne,
     [PA_SAMPLE_S32BE]     = (pa_convert_func_t) pa_sconv_s32be_from_float32ne,
     [PA_SAMPLE_S24LE]     = (pa_convert_func_t) pa_sconv_s24le_from_float32ne,
     [PA_SAMPLE_S24BE]     = (pa_convert_func_t) pa_sconv_s24be_from_float32ne,
     [PA_SAMPLE_S24_32LE]  = (pa_convert_func_t) pa_sconv_s24_32le_from_float32ne,
     [PA_SAMPLE_S24_32BE]  = (pa_convert_func_t) pa_sconv_s24_32be_from_float32ne,
-    [PA_SAMPLE_FLOAT32NE] = (pa_convert_func_t) float32ne_to_float32ne,
-    [PA_SAMPLE_FLOAT32RE] = (pa_convert_func_t) float32re_to_float32ne,
-    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_from_float32ne,
-    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_from_float32ne
 };
 
 pa_convert_func_t pa_get_convert_from_float32ne_function(pa_sample_format_t f) {
@@ -246,8 +246,10 @@ void pa_set_convert_from_float32ne_function(pa_sample_format_t f, pa_convert_fun
 
 static pa_convert_func_t to_s16ne_table[] = {
     [PA_SAMPLE_U8]        = (pa_convert_func_t) u8_to_s16ne,
-    [PA_SAMPLE_S16NE]     = (pa_convert_func_t) s16ne_to_s16ne,
-    [PA_SAMPLE_S16RE]     = (pa_convert_func_t) s16re_to_s16ne,
+    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_to_s16ne,
+    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_to_s16ne,
+    [PA_SAMPLE_S16NE]     = (pa_convert_func_t) s16_copy,
+    [PA_SAMPLE_S16RE]     = (pa_convert_func_t) s16_swap,
     [PA_SAMPLE_FLOAT32BE] = (pa_convert_func_t) pa_sconv_float32be_to_s16ne,
     [PA_SAMPLE_FLOAT32LE] = (pa_convert_func_t) pa_sconv_float32le_to_s16ne,
     [PA_SAMPLE_S32BE]     = (pa_convert_func_t) pa_sconv_s32be_to_s16ne,
@@ -256,8 +258,6 @@ static pa_convert_func_t to_s16ne_table[] = {
     [PA_SAMPLE_S24LE]     = (pa_convert_func_t) pa_sconv_s24le_to_s16ne,
     [PA_SAMPLE_S24_32BE]  = (pa_convert_func_t) pa_sconv_s24_32be_to_s16ne,
     [PA_SAMPLE_S24_32LE]  = (pa_convert_func_t) pa_sconv_s24_32le_to_s16ne,
-    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_to_s16ne,
-    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_to_s16ne
 };
 
 pa_convert_func_t pa_get_convert_to_s16ne_function(pa_sample_format_t f) {
@@ -278,8 +278,10 @@ void pa_set_convert_to_s16ne_function(pa_sample_format_t f, pa_convert_func_t fu
 
 static pa_convert_func_t from_s16ne_table[] = {
     [PA_SAMPLE_U8]        = (pa_convert_func_t) u8_from_s16ne,
-    [PA_SAMPLE_S16NE]     = (pa_convert_func_t) s16ne_to_s16ne,
-    [PA_SAMPLE_S16RE]     = (pa_convert_func_t) s16re_to_s16ne,
+    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_from_s16ne,
+    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_from_s16ne,
+    [PA_SAMPLE_S16NE]     = (pa_convert_func_t) s16_copy,
+    [PA_SAMPLE_S16RE]     = (pa_convert_func_t) s16_swap,
     [PA_SAMPLE_FLOAT32BE] = (pa_convert_func_t) pa_sconv_float32be_from_s16ne,
     [PA_SAMPLE_FLOAT32LE] = (pa_convert_func_t) pa_sconv_float32le_from_s16ne,
     [PA_SAMPLE_S32BE]     = (pa_convert_func_t) pa_sconv_s32be_from_s16ne,
@@ -288,8 +290,6 @@ static pa_convert_func_t from_s16ne_table[] = {
     [PA_SAMPLE_S24LE]     = (pa_convert_func_t) pa_sconv_s24le_from_s16ne,
     [PA_SAMPLE_S24_32BE]  = (pa_convert_func_t) pa_sconv_s24_32be_from_s16ne,
     [PA_SAMPLE_S24_32LE]  = (pa_convert_func_t) pa_sconv_s24_32le_from_s16ne,
-    [PA_SAMPLE_ALAW]      = (pa_convert_func_t) alaw_from_s16ne,
-    [PA_SAMPLE_ULAW]      = (pa_convert_func_t) ulaw_from_s16ne,
 };
 
 pa_convert_func_t pa_get_convert_from_s16ne_function(pa_sample_format_t f) {
