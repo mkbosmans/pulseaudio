@@ -59,6 +59,7 @@ remap-test
 resampler-test
 rtpoll-test
 rtstutter
+sconv-test
 sig2str-test
 sigbus-test
 smoother-test
