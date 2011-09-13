@@ -19,100 +19,41 @@
   USA.
 ***/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-/* Despite the name of this file we implement S32 and S24 handling here, too. */
+/* This file contains all the endianness-dependant sample format conversions in c code.
+ * It's not supposed to be compiled directly, but only through the files sconv_c-[bl]e.c
+ * that define some macros before including this file.
+ */
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <math.h>
 
-#include <pulsecore/sconv.h>
 #include <pulsecore/macro.h>
-#include <pulsecore/endianmacros.h>
-
-#include "sconv-s16le.h"
-
-#ifndef INT16_FROM
-#define INT16_FROM PA_INT16_FROM_LE
-#endif
-#ifndef UINT16_FROM
-#define UINT16_FROM PA_UINT16_FROM_LE
-#endif
-
-#ifndef INT16_TO
-#define INT16_TO PA_INT16_TO_LE
-#endif
-#ifndef UINT16_TO
-#define UINT16_TO PA_UINT16_TO_LE
-#endif
-
-#ifndef INT32_FROM
-#define INT32_FROM PA_INT32_FROM_LE
-#endif
-#ifndef UINT32_FROM
-#define UINT32_FROM PA_UINT32_FROM_LE
-#endif
-
-#ifndef INT32_TO
-#define INT32_TO PA_INT32_TO_LE
-#endif
-#ifndef UINT32_TO
-#define UINT32_TO PA_UINT32_TO_LE
-#endif
-
-#ifndef READ24
-#define READ24 PA_READ24LE
-#endif
-#ifndef WRITE24
-#define WRITE24 PA_WRITE24LE
-#endif
-
-#ifndef SWAP_WORDS
-#ifdef WORDS_BIGENDIAN
-#define SWAP_WORDS 1
-#else
-#define SWAP_WORDS 0
-#endif
-#endif
 
 void pa_sconv_s16le_to_float32ne(unsigned n, const int16_t *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
-#if SWAP_WORDS == 1
     for (; n > 0; n--) {
         int16_t s = *(a++);
         *(b++) = ((float) INT16_FROM(s))/(float) 0x8000;
     }
-#else
-    for (; n > 0; n--)
-        *(b++) = ((float) (*(a++)))/(float) 0x8000;
-#endif
 }
 
 void pa_sconv_s32le_to_float32ne(unsigned n, const int32_t *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
-#if SWAP_WORDS == 1
     for (; n > 0; n--) {
         int32_t s = *(a++);
         *(b++) = (float) (((double) INT32_FROM(s))/0x80000000);
     }
-#else
-    for (; n > 0; n--)
-        *(b++) = (float) (((double) (*(a++)))/0x80000000);
-#endif
 }
 
 void pa_sconv_s16le_from_float32ne(unsigned n, const float *a, int16_t *b) {
     pa_assert(a);
     pa_assert(b);
 
-#if SWAP_WORDS == 1
     for (; n > 0; n--) {
         int16_t s;
         float v = *(a++);
@@ -121,21 +62,12 @@ void pa_sconv_s16le_from_float32ne(unsigned n, const float *a, int16_t *b) {
         s = (int16_t) lrintf(v);
         *(b++) = INT16_TO(s);
     }
-#else
-    for (; n > 0; n--) {
-        float v = *(a++);
-
-        v = PA_CLAMP_UNLIKELY(v * 0x8000, - (float) 0x8000, (float) 0x7FFF);
-        *(b++) = (int16_t) lrintf(v);
-    }
-#endif
 }
 
 void pa_sconv_s32le_from_float32ne(unsigned n, const float *a, int32_t *b) {
     pa_assert(a);
     pa_assert(b);
 
-#if SWAP_WORDS == 1
     for (; n > 0; n--) {
         int32_t s;
         float v = *(a++);
@@ -144,14 +76,6 @@ void pa_sconv_s32le_from_float32ne(unsigned n, const float *a, int32_t *b) {
         s = (int32_t) lrint((double) v * (double) 0x80000000);
         *(b++) = INT32_TO(s);
     }
-#else
-    for (; n > 0; n--) {
-        float v = *(a++);
-
-        v = PA_CLAMP_UNLIKELY(v, -1.0f, 1.0f);
-        *(b++) = (int32_t) lrint((double) v * (double) 0x80000000);
-    }
-#endif
 }
 
 void pa_sconv_s16le_to_float32re(unsigned n, const int16_t *a, float *b) {

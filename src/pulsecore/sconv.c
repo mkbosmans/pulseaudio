@@ -31,9 +31,7 @@
 #include <pulsecore/g711.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/endianmacros.h>
-
-#include <pulsecore/sconv-s16le.h>
-#include <pulsecore/sconv-s16be.h>
+#include <pulsecore/sconv_c.h>
 
 #include "sconv.h"
 

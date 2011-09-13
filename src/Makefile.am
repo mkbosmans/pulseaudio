@@ -831,8 +831,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/cpu-orc.c pulsecore/cpu-orc.h \
 		pulsecore/svolume_c.c pulsecore/svolume_arm.c \
 		pulsecore/svolume_mmx.c pulsecore/svolume_sse.c \
-		pulsecore/sconv-s16be.c pulsecore/sconv-s16be.h \
-		pulsecore/sconv-s16le.c pulsecore/sconv-s16le.h \
+		pulsecore/sconv_c-be.c pulsecore/sconv_c-le.c pulsecore/sconv_c.h \
 		pulsecore/sconv_sse.c \
 		pulsecore/sconv.c pulsecore/sconv.h \
 		pulsecore/shared.c pulsecore/shared.h \

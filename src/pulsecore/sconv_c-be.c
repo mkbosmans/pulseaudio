@@ -23,7 +23,9 @@
 #include <config.h>
 #endif
 
-#include "endianmacros.h"
+#include <pulsecore/endianmacros.h>
+
+#include "sconv_c.h"
 
 #define INT16_FROM PA_INT16_FROM_BE
 #define INT16_TO PA_INT16_TO_BE
@@ -61,11 +63,4 @@
 #define pa_sconv_s24_32le_to_s16ne pa_sconv_s24_32be_to_s16ne
 #define pa_sconv_s24_32le_from_s16ne pa_sconv_s24_32be_from_s16ne
 
-#ifdef WORDS_BIGENDIAN
-#define SWAP_WORDS 0
-#else
-#define SWAP_WORDS 1
-#endif
-
-#include "sconv-s16le.h"
-#include "sconv-s16le.c"
+#include "sconv_c.c"
