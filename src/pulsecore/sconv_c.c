@@ -53,27 +53,27 @@ void pa_sconv_s16le_from_float32ne(unsigned n, const float *a, int16_t *b) {
     }
 }
 
-void pa_sconv_s16le_from_float32re(unsigned n, const float *a, int16_t *b) {
+void pa_sconv_float32le_to_s16ne(unsigned n, const float *a, int16_t *b) {
     pa_assert(a);
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++) {
-        float s = PA_FLOAT32_SWAP(*a);
+        float s = FLOAT32_FROM(*a);
         int16_t d;
         s = PA_CLAMP_UNLIKELY(s * 0x8000, - (float) 0x8000, (float) 0x7FFF);
         d = (int16_t) lrintf(s);
-        *b = INT16_TO(d);
+        *b = d;
     }
 }
 
-void pa_sconv_s16le_to_float32re(unsigned n, const int16_t *a, float *b) {
+void pa_sconv_float32le_from_s16ne(unsigned n, const int16_t *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++) {
-        int16_t s = INT16_FROM(*a);
+        int16_t s = *a;
         float d = ((float) s) / (float) 0x8000;
-        *b = PA_FLOAT32_SWAP(d);
+        *b = FLOAT32_TO(d);
     }
 }
 

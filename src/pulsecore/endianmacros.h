@@ -93,67 +93,61 @@ static inline float PA_FLOAT32_SWAP(float x) {
 #ifdef WORDS_BIGENDIAN
  #define PA_INT16_FROM_LE(x) PA_INT16_SWAP(x)
  #define PA_INT16_FROM_BE(x) ((int16_t)(x))
-
  #define PA_INT16_TO_LE(x) PA_INT16_SWAP(x)
  #define PA_INT16_TO_BE(x) ((int16_t)(x))
 
  #define PA_UINT16_FROM_LE(x) PA_UINT16_SWAP(x)
  #define PA_UINT16_FROM_BE(x) ((uint16_t)(x))
-
  #define PA_UINT16_TO_LE(x) PA_UINT16_SWAP(x)
  #define PA_UINT16_TO_BE(x) ((uint16_t)(x))
 
  #define PA_INT32_FROM_LE(x) PA_INT32_SWAP(x)
  #define PA_INT32_FROM_BE(x) ((int32_t)(x))
-
  #define PA_INT32_TO_LE(x) PA_INT32_SWAP(x)
  #define PA_INT32_TO_BE(x) ((int32_t)(x))
 
  #define PA_UINT32_FROM_LE(x) PA_UINT32_SWAP(x)
  #define PA_UINT32_FROM_BE(x) ((uint32_t)(x))
-
  #define PA_UINT32_TO_LE(x) PA_UINT32_SWAP(x)
  #define PA_UINT32_TO_BE(x) ((uint32_t)(x))
 
+ #define PA_FLOAT32_FROM_LE(x) PA_FLOAT32_SWAP(x)
+ #define PA_FLOAT32_FROM_BE(x) ((float) (x))
  #define PA_FLOAT32_TO_LE(x) PA_FLOAT32_SWAP(x)
  #define PA_FLOAT32_TO_BE(x) ((float) (x))
 
  #define PA_READ24NE(x) PA_READ24BE(x)
  #define PA_WRITE24NE(x,y) PA_WRITE24BE((x),(y))
-
  #define PA_READ24RE(x) PA_READ24LE(x)
  #define PA_WRITE24RE(x,y) PA_WRITE24LE((x),(y))
 #else
  #define PA_INT16_FROM_LE(x) ((int16_t)(x))
  #define PA_INT16_FROM_BE(x) PA_INT16_SWAP(x)
-
  #define PA_INT16_TO_LE(x) ((int16_t)(x))
  #define PA_INT16_TO_BE(x) PA_INT16_SWAP(x)
 
  #define PA_UINT16_FROM_LE(x) ((uint16_t)(x))
  #define PA_UINT16_FROM_BE(x) PA_UINT16_SWAP(x)
-
  #define PA_UINT16_TO_LE(x) ((uint16_t)(x))
  #define PA_UINT16_TO_BE(x) PA_UINT16_SWAP(x)
 
  #define PA_INT32_FROM_LE(x) ((int32_t)(x))
  #define PA_INT32_FROM_BE(x) PA_INT32_SWAP(x)
-
  #define PA_INT32_TO_LE(x) ((int32_t)(x))
  #define PA_INT32_TO_BE(x) PA_INT32_SWAP(x)
 
  #define PA_UINT32_FROM_LE(x) ((uint32_t)(x))
  #define PA_UINT32_FROM_BE(x) PA_UINT32_SWAP(x)
-
  #define PA_UINT32_TO_LE(x) ((uint32_t)(x))
  #define PA_UINT32_TO_BE(x) PA_UINT32_SWAP(x)
 
+ #define PA_FLOAT32_FROM_LE(x) ((float) (x))
+ #define PA_FLOAT32_FROM_BE(x) PA_FLOAT32_SWAP(x)
  #define PA_FLOAT32_TO_LE(x) ((float) (x))
  #define PA_FLOAT32_TO_BE(x) PA_FLOAT32_SWAP(x)
 
  #define PA_READ24NE(x) PA_READ24LE(x)
  #define PA_WRITE24NE(x,y) PA_WRITE24LE((x),(y))
-
  #define PA_READ24RE(x) PA_READ24BE(x)
  #define PA_WRITE24RE(x,y) PA_WRITE24BE((x),(y))
 #endif
