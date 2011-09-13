@@ -32,4 +32,6 @@ void pa_volume_func_init_orc(void);
 
 void pa_remap_func_init_orc(void);
 
+void pa_convert_func_init_orc(void);
+
 #endif /* foocpuorchfoo */
