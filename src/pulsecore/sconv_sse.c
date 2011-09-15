@@ -35,7 +35,7 @@
 
 static const PA_DECLARE_ALIGNED (16, float, one[4]) = { 1.0, 1.0, 1.0, 1.0 };
 static const PA_DECLARE_ALIGNED (16, float, mone[4]) = { -1.0, -1.0, -1.0, -1.0 };
-static const PA_DECLARE_ALIGNED (16, float, scale[4]) = { 0x7fff, 0x7fff, 0x7fff, 0x7fff };
+static const PA_DECLARE_ALIGNED (16, float, scale[4]) = { 0x8000, 0x8000, 0x8000, 0x8000 };
 
 static void sconv_s16le_from_f32ne_sse(unsigned n, const float *a, int16_t *b) {
     pa_reg_x86 temp, i;
@@ -58,7 +58,7 @@ static void sconv_s16le_from_f32ne_sse(unsigned n, const float *a, int16_t *b) {
         " minps  %%xmm5, %%xmm2         \n\t"
         " maxps  %%xmm6, %%xmm0         \n\t" /* clamp to -1.0 */
         " maxps  %%xmm6, %%xmm2         \n\t"
-        " mulps  %%xmm7, %%xmm0         \n\t" /* *= 0x7fff */
+        " mulps  %%xmm7, %%xmm0         \n\t" /* *= 0x8000 */
         " mulps  %%xmm7, %%xmm2         \n\t"
 
         " cvtps2pi %%xmm0, %%mm0        \n\t" /* low part to int */
@@ -123,7 +123,7 @@ static void sconv_s16le_from_f32ne_sse2(unsigned n, const float *a, int16_t *b) 
         " minps  %%xmm5, %%xmm2         \n\t"
         " maxps  %%xmm6, %%xmm0         \n\t" /* clamp to -1.0 */
         " maxps  %%xmm6, %%xmm2         \n\t"
-        " mulps  %%xmm7, %%xmm0         \n\t" /* *= 0x7fff */
+        " mulps  %%xmm7, %%xmm0         \n\t" /* *= 0x8000 */
         " mulps  %%xmm7, %%xmm2         \n\t"
 
         " cvtps2dq %%xmm0, %%xmm0       \n\t"
