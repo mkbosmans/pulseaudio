@@ -40,6 +40,8 @@
 #define READ24 PA_READ24BE
 #define WRITE24 PA_WRITE24BE
 
+#define SCONV_BE
+
 #define pa_sconv_s16le_to_float32ne pa_sconv_s16be_to_float32ne
 #define pa_sconv_s16le_from_float32ne pa_sconv_s16be_from_float32ne
 #define pa_sconv_float32le_to_s16ne pa_sconv_float32be_to_s16ne

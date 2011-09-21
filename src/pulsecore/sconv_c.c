@@ -122,22 +122,35 @@ void pa_sconv_s32le_from_float32ne(unsigned n, const float *a, int32_t *b) {
 }
 
 /* 24 bits in 3 bytes */
-void pa_sconv_s24le_to_s16ne(unsigned n, const uint8_t *a, int16_t *b) {
+void pa_sconv_s24le_to_s16ne(unsigned n, const uint8_t *a, uint8_t *b) {
     pa_assert(a);
     pa_assert(b);
 
-    for (; n > 0; n--, a+=3, b++) {
-        *b = (int16_t) (READ24(a) >> 8);
+    for (; n > 0; n--, a+=3, b+=2) {
+#ifdef SCONV_BE
+        b[0] = a[1];
+        b[1] = a[0];
+#else
+        b[0] = a[1];
+        b[1] = a[2];
+#endif
     }
 }
 
-void pa_sconv_s24le_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
+void pa_sconv_s24le_from_s16ne(unsigned n, const uint8_t *a, uint8_t *b) {
     pa_assert(a);
     pa_assert(b);
 
-    for (; n > 0; n--, a++, b+=3) {
-        int16_t s = *a;
-        WRITE24(b, ((uint32_t) s) << 8);
+    for (; n > 0; n--, a+=2, b+=3) {
+#ifdef SCONV_BE
+        b[2] = 0;
+        b[1] = a[0];
+        b[0] = a[1];
+#else
+        b[0] = 0;
+        b[1] = a[0];
+        b[2] = a[1];
+#endif
     }
 }
 
