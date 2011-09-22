@@ -65,6 +65,7 @@ sigbus-test
 smoother-test
 stripnul
 strlist-test
+svolume-test
 sync-playback
 system.pa
 thread-mainloop-test

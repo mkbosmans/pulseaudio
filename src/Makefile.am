@@ -236,6 +236,7 @@ TESTS_default = \
 		smoother-test \
 		thread-test \
 		volume-test \
+		svolume-test \
 		mix-test \
 		remap-test \
 		sconv-test \
@@ -484,6 +485,11 @@ smoother_test_SOURCES = tests/smoother-test.c
 smoother_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
 smoother_test_CFLAGS = $(AM_CFLAGS)
 smoother_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
+
+svolume_test_SOURCES = tests/svolume-test.c
+svolume_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
+svolume_test_CFLAGS = $(AM_CFLAGS)
+svolume_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 proplist_test_SOURCES = tests/proplist-test.c
 proplist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
