@@ -24,11 +24,11 @@
 #include <config.h>
 #endif
 
+#include <pulsecore/log.h>
 #include <pulsecore/macro.h>
+#include <pulsecore/sample-util.h>
 
 #include "cpu-x86.h"
-
-#include "sample-util.h"
 
 #if defined (__i386__) || defined (__amd64__)
 
@@ -72,7 +72,7 @@
 
 static int channel_overread_table[8] = {8,8,8,12,8,10,12,14};
 
-static void pa_volume_s16ne_sse2(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
+static void volume_s16ne_sse2(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     pa_reg_x86 channel, temp;
 
     /* Channels must be at least 8 and always a multiple of the original number.
@@ -156,7 +156,7 @@ static void pa_volume_s16ne_sse2(int16_t *samples, int32_t *volumes, unsigned ch
     );
 }
 
-static void pa_volume_s16re_sse2(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
+static void volume_s16re_sse2(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     pa_reg_x86 channel, temp;
 
     /* Channels must be at least 8 and always a multiple of the original number.
@@ -255,8 +255,8 @@ void pa_volume_func_init_sse(pa_cpu_x86_flag_t flags) {
     if (flags & PA_CPU_X86_SSE2) {
         pa_log_info("Initialising SSE2 optimized volume functions.");
 
-        pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) pa_volume_s16ne_sse2);
-        pa_set_volume_func(PA_SAMPLE_S16RE, (pa_do_volume_func_t) pa_volume_s16re_sse2);
+        pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_sse2);
+        pa_set_volume_func(PA_SAMPLE_S16RE, (pa_do_volume_func_t) volume_s16re_sse2);
     }
 #endif /* defined (__i386__) || defined (__amd64__) */
 }

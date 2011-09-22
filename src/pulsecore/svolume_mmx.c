@@ -24,11 +24,11 @@
 #include <config.h>
 #endif
 
+#include <pulsecore/log.h>
 #include <pulsecore/macro.h>
+#include <pulsecore/sample-util.h>
 
 #include "cpu-x86.h"
-
-#include "sample-util.h"
 
 #if defined (__i386__) || defined (__amd64__)
 /* in s: 2 int16_t samples
@@ -88,7 +88,7 @@
       " por %%mm4, "#s1"             \n\t" /* .. |  l  h |  */ \
       " por %%mm5, "#s2"             \n\t"
 
-static void pa_volume_s16ne_mmx(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
+static void volume_s16ne_mmx(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     pa_reg_x86 channel, temp;
 
     /* Channels must be at least 4, and always a multiple of the original number.
@@ -157,7 +157,7 @@ static void pa_volume_s16ne_mmx(int16_t *samples, int32_t *volumes, unsigned cha
     );
 }
 
-static void pa_volume_s16re_mmx(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
+static void volume_s16re_mmx(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     pa_reg_x86 channel, temp;
 
     /* Channels must be at least 4, and always a multiple of the original number.
@@ -243,8 +243,8 @@ void pa_volume_func_init_mmx(pa_cpu_x86_flag_t flags) {
     if ((flags & PA_CPU_X86_MMX) && (flags & PA_CPU_X86_CMOV)) {
         pa_log_info("Initialising MMX optimized volume functions.");
 
-        pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) pa_volume_s16ne_mmx);
-        pa_set_volume_func(PA_SAMPLE_S16RE, (pa_do_volume_func_t) pa_volume_s16re_mmx);
+        pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_mmx);
+        pa_set_volume_func(PA_SAMPLE_S16RE, (pa_do_volume_func_t) volume_s16re_mmx);
     }
 #endif /* defined (__i386__) || defined (__amd64__) */
 }

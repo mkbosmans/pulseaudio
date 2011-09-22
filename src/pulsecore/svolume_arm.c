@@ -24,11 +24,11 @@
 #include <config.h>
 #endif
 
+#include <pulsecore/log.h>
 #include <pulsecore/macro.h>
+#include <pulsecore/sample-util.h>
 
 #include "cpu-arm.h"
-
-#include "sample-util.h"
 
 #if defined (__arm__) && defined (HAVE_ARMV6)
 
@@ -38,7 +38,7 @@
     " addcs r0, %1                  \n\t" \
     " movcs r6, r0                  \n\t"
 
-static void pa_volume_s16ne_arm(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
+static void volume_s16ne_arm(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     int32_t *ve;
 
     /* Channels must be at least 4, and always a multiple of the original number.
@@ -125,6 +125,6 @@ void pa_volume_func_init_arm(pa_cpu_arm_flag_t flags) {
 #if defined (__arm__) && defined (HAVE_ARMV6)
     pa_log_info("Initialising ARM optimized volume functions.");
 
-    pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) pa_volume_s16ne_arm);
+    pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_arm);
 #endif /* defined (__arm__) && defined (HAVE_ARMV6) */
 }

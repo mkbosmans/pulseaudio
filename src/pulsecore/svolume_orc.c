@@ -25,27 +25,28 @@
 #include <config.h>
 #endif
 
-#include "cpu-orc.h"
+#include <pulsecore/log.h>
 #include <pulsecore/sample-util.h>
 #include <pulsecore/svolume-orc-gen.h>
 
+#include "cpu-orc.h"
+
 pa_do_volume_func_t fallback;
 
-static void
-pa_volume_s16ne_orc(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length)
-{
+static void volume_s16ne_orc(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     if (channels == 2) {
         int64_t v = (int64_t)volumes[1] << 32 | volumes[0];
         pa_volume_s16ne_orc_2ch (samples, v, ((length / (sizeof(int16_t))) / 2));
-    } else if (channels == 1)
+    } else if (channels == 1) {
         pa_volume_s16ne_orc_1ch (samples, volumes[0], length / (sizeof(int16_t)));
-    else
+    } else {
         fallback(samples, volumes, channels, length);
+    }
 }
 
 void pa_volume_func_init_orc(void) {
     pa_log_info("Initialising ORC optimized volume functions.");
 
     fallback = pa_get_volume_func(PA_SAMPLE_S16NE);
-    pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) pa_volume_s16ne_orc);
+    pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_orc);
 }
