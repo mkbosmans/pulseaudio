@@ -541,7 +541,6 @@ pa_resample_method_t pa_parse_resample_method(const char *string) {
 }
 
 static pa_bool_t on_left(pa_channel_position_t p) {
-
     return
         p == PA_CHANNEL_POSITION_FRONT_LEFT ||
         p == PA_CHANNEL_POSITION_REAR_LEFT ||
@@ -552,7 +551,6 @@ static pa_bool_t on_left(pa_channel_position_t p) {
 }
 
 static pa_bool_t on_right(pa_channel_position_t p) {
-
     return
         p == PA_CHANNEL_POSITION_FRONT_RIGHT ||
         p == PA_CHANNEL_POSITION_REAR_RIGHT ||
@@ -563,7 +561,6 @@ static pa_bool_t on_right(pa_channel_position_t p) {
 }
 
 static pa_bool_t on_center(pa_channel_position_t p) {
-
     return
         p == PA_CHANNEL_POSITION_FRONT_CENTER ||
         p == PA_CHANNEL_POSITION_REAR_CENTER ||
@@ -699,7 +696,7 @@ static void calc_map_table(pa_resampler *r) {
              *
              * 2) Mono Handling:
              *    S:Mono: Copy into all D:channels
-             *    D:Mono: Copy in all S:channels
+             *    D:Mono: Average over all S:channels
              *
              * 3) Mix D:Left, D:Right:
              *    D:Left: If not connected, avg all S:Left
@@ -742,8 +739,13 @@ static void calc_map_table(pa_resampler *r) {
              * best to pass it to L+R.
              */
 
-            if (a == b || a == PA_CHANNEL_POSITION_MONO || b == PA_CHANNEL_POSITION_MONO) {
+            if (a == b || a == PA_CHANNEL_POSITION_MONO) {
                 m->map_table_f[oc][ic] = 1.0;
+
+                oc_connected = TRUE;
+                ic_connected[ic] = TRUE;
+            } else if (b == PA_CHANNEL_POSITION_MONO) {
+                m->map_table_f[oc][ic] = 1.0 / n_ic;
 
                 oc_connected = TRUE;
                 ic_connected[ic] = TRUE;
