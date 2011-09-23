@@ -59,10 +59,10 @@ static void pa_volume_alaw_c(uint8_t *samples, int32_t *volumes, unsigned channe
         hi = volumes[channel] >> 16;
         lo = volumes[channel] & 0xFFFF;
 
-        t = (int32_t) st_alaw2linear16(*samples);
+        t = (int32_t) sox_alaw2linear16(*samples);
         t = ((t * lo) >> 16) + (t * hi);
         t = PA_CLAMP_UNLIKELY(t, -0x8000, 0x7FFF);
-        *samples++ = (uint8_t) st_13linear2alaw((int16_t) t >> 3);
+        *samples++ = (uint8_t) sox_13linear2alaw((int16_t) t >> 3);
 
         if (PA_UNLIKELY(++channel >= channels))
             channel = 0;
@@ -78,10 +78,10 @@ static void pa_volume_ulaw_c(uint8_t *samples, int32_t *volumes, unsigned channe
         hi = volumes[channel] >> 16;
         lo = volumes[channel] & 0xFFFF;
 
-        t = (int32_t) st_ulaw2linear16(*samples);
+        t = (int32_t) sox_ulaw2linear16(*samples);
         t = ((t * lo) >> 16) + (t * hi);
         t = PA_CLAMP_UNLIKELY(t, -0x8000, 0x7FFF);
-        *samples++ = (uint8_t) st_14linear2ulaw((int16_t) t >> 2);
+        *samples++ = (uint8_t) sox_14linear2ulaw((int16_t) t >> 2);
 
         if (PA_UNLIKELY(++channel >= channels))
             channel = 0;

@@ -113,7 +113,7 @@ static void ulaw_to_float32ne(unsigned n, const uint8_t *a, float *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = (float) st_ulaw2linear16(*a) / 0x8000;
+        *b = (float) sox_ulaw2linear16(*a) / 0x8000;
 }
 
 static void ulaw_from_float32ne(unsigned n, const float *a, uint8_t *b) {
@@ -123,7 +123,7 @@ static void ulaw_from_float32ne(unsigned n, const float *a, uint8_t *b) {
     for (; n > 0; n--, a++, b++) {
         float s = *a;
         s = PA_CLAMP_UNLIKELY(s * 0x2000, - (float) 0x2000, (float) 0x1FFF);
-        *b = st_14linear2ulaw((int16_t) lrintf(s));
+        *b = sox_14linear2ulaw((int16_t) lrintf(s));
     }
 }
 
@@ -132,7 +132,7 @@ static void ulaw_to_s16ne(unsigned n, const uint8_t *a, int16_t *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = st_ulaw2linear16(*a);
+        *b = sox_ulaw2linear16(*a);
 }
 
 static void ulaw_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
@@ -140,7 +140,7 @@ static void ulaw_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = st_14linear2ulaw(*a >> 2);
+        *b = sox_14linear2ulaw(*a >> 2);
 }
 
 /* alaw */
@@ -150,7 +150,7 @@ static void alaw_to_float32ne(unsigned n, const uint8_t *a, float *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = (float) st_alaw2linear16(*a) / 0x8000;
+        *b = (float) sox_alaw2linear16(*a) / 0x8000;
 }
 
 static void alaw_from_float32ne(unsigned n, const float *a, uint8_t *b) {
@@ -160,7 +160,7 @@ static void alaw_from_float32ne(unsigned n, const float *a, uint8_t *b) {
     for (; n > 0; n--, a++, b++) {
         float s = *a;
         s = PA_CLAMP_UNLIKELY(s * 0x1000, - (float) 0x1000, (float) 0x0FFF);
-        *b = st_13linear2alaw((int16_t) lrintf(s));
+        *b = sox_13linear2alaw((int16_t) lrintf(s));
     }
 }
 
@@ -169,7 +169,7 @@ static void alaw_to_s16ne(unsigned n, const uint8_t *a, int16_t *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = st_alaw2linear16(*a);
+        *b = sox_alaw2linear16(*a);
 }
 
 static void alaw_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
@@ -177,7 +177,7 @@ static void alaw_from_s16ne(unsigned n, const int16_t *a, uint8_t *b) {
     pa_assert(b);
 
     for (; n > 0; n--, a++, b++)
-        *b = st_13linear2alaw(*a >> 3);
+        *b = sox_13linear2alaw(*a >> 3);
 }
 
 static pa_convert_func_t to_float32ne_table[] = {

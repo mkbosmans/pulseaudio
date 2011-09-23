@@ -564,7 +564,7 @@ size_t pa_mix(
                     hi = cv >> 16;
                     lo = cv & 0xFFFF;
 
-                    v = (int32_t) st_ulaw2linear16(*((uint8_t*) m->ptr));
+                    v = (int32_t) sox_ulaw2linear16(*((uint8_t*) m->ptr));
                     v = ((v * lo) >> 16) + (v * hi);
                     sum += v;
 
@@ -572,7 +572,7 @@ size_t pa_mix(
                 }
 
                 sum = PA_CLAMP_UNLIKELY(sum, -0x8000, 0x7FFF);
-                *((uint8_t*) data) = (uint8_t) st_14linear2ulaw((int16_t) sum >> 2);
+                *((uint8_t*) data) = (uint8_t) sox_14linear2ulaw((int16_t) sum >> 2);
 
                 data = (uint8_t*) data + 1;
 
@@ -602,7 +602,7 @@ size_t pa_mix(
                     hi = cv >> 16;
                     lo = cv & 0xFFFF;
 
-                    v = (int32_t) st_alaw2linear16(*((uint8_t*) m->ptr));
+                    v = (int32_t) sox_alaw2linear16(*((uint8_t*) m->ptr));
                     v = ((v * lo) >> 16) + (v * hi);
                     sum += v;
 
@@ -610,7 +610,7 @@ size_t pa_mix(
                 }
 
                 sum = PA_CLAMP_UNLIKELY(sum, -0x8000, 0x7FFF);
-                *((uint8_t*) data) = (uint8_t) st_13linear2alaw((int16_t) sum >> 3);
+                *((uint8_t*) data) = (uint8_t) sox_13linear2alaw((int16_t) sum >> 3);
 
                 data = (uint8_t*) data + 1;
 
