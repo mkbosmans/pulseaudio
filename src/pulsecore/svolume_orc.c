@@ -25,6 +25,8 @@
 #include <config.h>
 #endif
 
+#include <math.h>
+
 #include <pulsecore/log.h>
 #include <pulsecore/sample-util.h>
 #include <pulsecore/svolume-orc-gen.h>
@@ -40,7 +42,15 @@ static void volume_s16ne_orc(int16_t *samples, int32_t *volumes, unsigned channe
     } else if (channels == 1) {
         pa_volume_s16ne_orc_1ch (samples, volumes[0], length / (sizeof(int16_t)));
     } else {
-        fallback_s16(samples, volumes, channels, length);
+        int32_t volume = volumes[0];
+        for (unsigned i = 0; i < channels; i++) {
+            if (volume != volumes[i])
+                volume = -1;
+        }
+        if (volume > -1)
+            pa_volume_s16ne_orc_1ch(samples, volumes[0], length / (sizeof(int16_t)));
+        else
+            fallback_s16(samples, volumes, channels, length);
     }
 }
 
@@ -48,7 +58,15 @@ static void volume_float32ne_orc(float *samples, float *volumes, unsigned channe
     if (channels == 1) {
         pa_volume_float32ne_orc_1ch(samples, volumes[0], length / (sizeof(float)));
     } else {
-        fallback_float(samples, volumes, channels, length);
+        float volume = volumes[0];
+        for (unsigned i = 0; i < channels; i++) {
+            if (fabsf(volume - volumes[i]) > 0.0f)
+                volume = -1;
+        }
+        if (volume > -1)
+            pa_volume_float32ne_orc_1ch(samples, volumes[0], length / (sizeof(float)));
+        else
+            fallback_float(samples, volumes, channels, length);
     }
 }
 
