@@ -28,8 +28,8 @@
 #include <math.h>
 
 #include <pulsecore/log.h>
-#include <pulsecore/sample-util.h>
 #include <pulsecore/svolume-orc-gen.h>
+#include <pulsecore/svolume.h>
 
 #include "cpu-orc.h"
 

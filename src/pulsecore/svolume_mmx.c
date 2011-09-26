@@ -26,7 +26,7 @@
 
 #include <pulsecore/log.h>
 #include <pulsecore/macro.h>
-#include <pulsecore/sample-util.h>
+#include <pulsecore/svolume.h>
 
 #include "cpu-x86.h"
 

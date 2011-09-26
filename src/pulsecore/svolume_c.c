@@ -28,8 +28,6 @@
 #include <pulsecore/g711.h>
 #include <pulsecore/endianmacros.h>
 
-#include "sample-util.h"
-
 static void volume_u8_c(uint8_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     unsigned channel;
 
@@ -273,34 +271,4 @@ static void volume_s24_32re_c(uint32_t *samples, int32_t *volumes, unsigned chan
         if (++channel >= channels)
             channel = 0;
     }
-}
-
-static pa_do_volume_func_t do_volume_table[] = {
-    [PA_SAMPLE_U8]        = (pa_do_volume_func_t) volume_u8_c,
-    [PA_SAMPLE_ALAW]      = (pa_do_volume_func_t) volume_alaw_c,
-    [PA_SAMPLE_ULAW]      = (pa_do_volume_func_t) volume_ulaw_c,
-    [PA_SAMPLE_S16NE]     = (pa_do_volume_func_t) volume_s16ne_c,
-    [PA_SAMPLE_S16RE]     = (pa_do_volume_func_t) volume_s16re_c,
-    [PA_SAMPLE_FLOAT32NE] = (pa_do_volume_func_t) volume_float32ne_c,
-    [PA_SAMPLE_FLOAT32RE] = (pa_do_volume_func_t) volume_float32re_c,
-    [PA_SAMPLE_S32NE]     = (pa_do_volume_func_t) volume_s32ne_c,
-    [PA_SAMPLE_S32RE]     = (pa_do_volume_func_t) volume_s32re_c,
-    [PA_SAMPLE_S24NE]     = (pa_do_volume_func_t) volume_s24ne_c,
-    [PA_SAMPLE_S24RE]     = (pa_do_volume_func_t) volume_s24re_c,
-    [PA_SAMPLE_S24_32NE]  = (pa_do_volume_func_t) volume_s24_32ne_c,
-    [PA_SAMPLE_S24_32RE]  = (pa_do_volume_func_t) volume_s24_32re_c
-};
-
-pa_do_volume_func_t pa_get_volume_func(pa_sample_format_t f) {
-    pa_assert(f >= 0);
-    pa_assert(f < PA_SAMPLE_MAX);
-
-    return do_volume_table[f];
-}
-
-void pa_set_volume_func(pa_sample_format_t f, pa_do_volume_func_t func) {
-    pa_assert(f >= 0);
-    pa_assert(f < PA_SAMPLE_MAX);
-
-    do_volume_table[f] = func;
 }

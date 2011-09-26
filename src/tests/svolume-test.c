@@ -29,11 +29,12 @@
 #include <math.h>
 
 #include <pulse/rtclock.h>
+#include <pulse/volume.h>
 
 #include <pulsecore/macro.h>
 #include <pulsecore/cpu.h>
 #include <pulsecore/cpu-orc.h>
-#include <pulsecore/sample-util.h>
+#include <pulsecore/svolume.h>
 
 #define MAX_CHANNELS 4
 #define N_SAMPLES 9600

@@ -39,6 +39,7 @@
 #include <pulsecore/g711.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/endianmacros.h>
+#include <pulsecore/svolume.h>
 
 #include "sample-util.h"
 
