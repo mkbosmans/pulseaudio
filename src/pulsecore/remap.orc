@@ -17,9 +17,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 #  USA.
 
-.init remap_orc_init
-
 .function remap_mono_to_stereo_float_orc
+.init remap_mono_to_stereo_orc_init
 .dest 8 dst float
 .source 4 src float
 .temp 8 t1
@@ -29,12 +28,14 @@ swaplq t2 t1
 orq dst t1 t2
 
 .function remap_mono_to_stereo_s16_orc
+.init remap_mono_to_stereo_orc_init
 .dest 4 dst int16_t
 .source 2 src int16_t
 mergewl dst, src, src
 
 
 .function remap_stereo_to_mono_float_orc
+.init remap_stereo_to_mono_orc_init
 .dest 4 dst float
 .source 8 src float
 .temp 4 t1
@@ -45,6 +46,7 @@ addf t3, t1, t2
 mulf dst, t3, 0.5
 
 .function remap_stereo_to_mono_s16_orc
+.init remap_stereo_to_mono_orc_init
 .dest 2 dst int16_t
 .source 4 src int16_t
 .temp 2 t1
@@ -54,11 +56,13 @@ avgsw dst, t1, t2
 
 
 .function remap_stereo_swap_float_orc
+.init remap_stereo_swap_orc_init
 .dest 8 dst float
 .source 8 src float
 swaplq dst, src
 
 .function remap_stereo_swap_s16_orc
+.init remap_stereo_swap_orc_init
 .dest 4 dst int16_t
 .source 4 src int16_t
 swapwl dst, src

@@ -1081,7 +1081,7 @@ AC_SUBST(LIBSPEEX_LIBS)
 
 #### ORC (optional) ####
 
-ORC_CHECK([0.4.11])
+ORC_CHECK([0.4.14.1])
 
 #### Build and Install man pages ####
 

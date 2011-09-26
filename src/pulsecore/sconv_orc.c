@@ -49,20 +49,35 @@ MAKE_ORC_FUNCTION(s16ne_to_s32ne)
 
 void pa_convert_func_init_orc() {
     pa_log_info("Initialising Orc optimized conversions.");
-    sconv_orc_init();
 
-    pa_set_convert_from_float32ne_function(PA_SAMPLE_S16NE, sconv_float32ne_to_s16ne_orc);
-    pa_set_convert_from_float32ne_function(PA_SAMPLE_S16RE, sconv_float32ne_to_s16re_orc);
-    pa_set_convert_to_s16ne_function(PA_SAMPLE_FLOAT32RE, sconv_float32re_to_s16ne_orc);
-    pa_set_convert_to_s16ne_function(PA_SAMPLE_FLOAT32NE, sconv_float32ne_to_s16ne_orc);
+    if (sconv_float32_to_s16_orc_init()) {
+        pa_log_warn("ORC optimized conversions could not be compiled.");
+    } else {
+        pa_set_convert_from_float32ne_function(PA_SAMPLE_S16NE, sconv_float32ne_to_s16ne_orc);
+        pa_set_convert_from_float32ne_function(PA_SAMPLE_S16RE, sconv_float32ne_to_s16re_orc);
+        pa_set_convert_to_s16ne_function(PA_SAMPLE_FLOAT32RE, sconv_float32re_to_s16ne_orc);
+        pa_set_convert_to_s16ne_function(PA_SAMPLE_FLOAT32NE, sconv_float32ne_to_s16ne_orc);
+    }
 
-    pa_set_convert_from_s16ne_function(PA_SAMPLE_FLOAT32NE, sconv_s16ne_to_float32ne_orc);
-    pa_set_convert_from_s16ne_function(PA_SAMPLE_FLOAT32RE, sconv_s16ne_to_float32re_orc);
-    pa_set_convert_to_float32ne_function(PA_SAMPLE_S16RE, sconv_s16re_to_float32ne_orc);
-    pa_set_convert_to_float32ne_function(PA_SAMPLE_S16NE, sconv_s16ne_to_float32ne_orc);
+    if (sconv_s16_to_float32_orc_init()) {
+        pa_log_warn("ORC optimized conversions could not be compiled.");
+    } else {
+        pa_set_convert_from_s16ne_function(PA_SAMPLE_FLOAT32NE, sconv_s16ne_to_float32ne_orc);
+        pa_set_convert_from_s16ne_function(PA_SAMPLE_FLOAT32RE, sconv_s16ne_to_float32re_orc);
+        pa_set_convert_to_float32ne_function(PA_SAMPLE_S16RE, sconv_s16re_to_float32ne_orc);
+        pa_set_convert_to_float32ne_function(PA_SAMPLE_S16NE, sconv_s16ne_to_float32ne_orc);
+    }
 
-    pa_set_convert_from_s16ne_function(PA_SAMPLE_S16RE, sconv_16bits_swap_orc);
-    pa_set_convert_to_s16ne_function(PA_SAMPLE_S16RE, sconv_16bits_swap_orc);
+    if (sconv_16bits_swap_orc_init()) {
+        pa_log_warn("ORC optimized conversions could not be compiled.");
+    } else {
+        pa_set_convert_from_s16ne_function(PA_SAMPLE_S16RE, sconv_16bits_swap_orc);
+        pa_set_convert_to_s16ne_function(PA_SAMPLE_S16RE, sconv_16bits_swap_orc);
+    }
 
-    pa_set_convert_from_s16ne_function(PA_SAMPLE_S32NE, sconv_s16ne_to_s32ne_orc);
+    if (sconv_s16ne_to_s32ne_orc_init()) {
+        pa_log_warn("ORC optimized conversions could not be compiled.");
+    } else {
+        pa_set_convert_from_s16ne_function(PA_SAMPLE_S32NE, sconv_s16ne_to_s32ne_orc);
+    }
 }

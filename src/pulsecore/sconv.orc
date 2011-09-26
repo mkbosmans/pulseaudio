@@ -17,10 +17,9 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 #  USA.
 
-.init sconv_orc_init
-
 # float -> s16
 .function sconv_float32ne_to_s16ne_orc_impl
+.init sconv_float32_to_s16_orc_init
 .dest 2 dst int16_t
 .source 4 src float
 .temp 4 t1 float
@@ -31,6 +30,7 @@ convfl t2, t1
 convssslw dst, t2
 
 .function sconv_float32re_to_s16ne_orc_impl
+.init sconv_float32_to_s16_orc_init
 .dest 2 dst int16_t
 .source 4 src float
 .temp 4 t0 float
@@ -43,6 +43,7 @@ convfl t2, t1
 convssslw dst, t2
 
 .function sconv_float32ne_to_s16re_orc_impl
+.init sconv_float32_to_s16_orc_init
 .dest 2 dst int16_t
 .source 4 src float
 .temp 4 t1 float
@@ -57,6 +58,7 @@ swapw dst, t3
 
 # s16 -> float
 .function sconv_s16ne_to_float32ne_orc_impl
+.init sconv_s16_to_float32_orc_init
 .dest 4 dst float
 .source 2 src int16_t
 .temp 4 t1 int32_t
@@ -68,6 +70,7 @@ mulf dst, t2, 0.0000305175781
               # 1.0 / 0x8000
 
 .function sconv_s16re_to_float32ne_orc_impl
+.init sconv_s16_to_float32_orc_init
 .dest 4 dst float
 .source 2 src int16_t
 .temp 2 t0 int16_t
@@ -81,6 +84,7 @@ mulf dst, t2, 0.0000305175781
               # 1.0 / 0x8000
 
 .function sconv_s16ne_to_float32re_orc_impl
+.init sconv_s16_to_float32_orc_init
 .dest 4 dst float
 .source 2 src int16_t
 .temp 4 t1 int32_t
@@ -96,6 +100,7 @@ swapl dst, t3
 
 # s16 endianness swap
 .function sconv_16bits_swap_orc_impl
+.init sconv_16bits_swap_orc_init
 .dest 2 dst int16_t
 .source 2 src int16_t
 
@@ -104,6 +109,7 @@ swapw dst, src
 
 # s16 -> s32
 .function sconv_s16ne_to_s32ne_orc_impl
+.init sconv_s16ne_to_s32ne_orc_init
 .dest 4 dst int32_t
 .source 2 src int16_t
 .temp 4 t1 int32_t

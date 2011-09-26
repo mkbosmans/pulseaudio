@@ -44,6 +44,7 @@
 #         sample =               |    (ml >> 16)   | (signed, saturated)
 
 .function pa_volume_s16ne_orc_1ch
+.init pa_volume_s16ne_orc_init
 .dest 2 samples int16_t
 .param 4 v int32_t
 .temp 2 vh
@@ -63,6 +64,7 @@ addl ml, ml, mh
 convssslw samples, ml
 
 .function pa_volume_s16ne_orc_2ch
+.init pa_volume_s16ne_orc_init
 .dest 4 samples int16_t
 .longparam 8 vols
 .temp 8 v
@@ -85,6 +87,7 @@ x2 convssslw samples, ml
 
 
 .function pa_volume_float32ne_orc_1ch
+.init pa_volume_float32ne_orc_init
 .dest 4 samples float
 .floatparam 4 vol float
 

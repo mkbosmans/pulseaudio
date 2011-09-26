@@ -33,14 +33,10 @@ orcc_v_gen = $(orcc_v_gen_$(V))
 orcc_v_gen_ = $(orcc_v_gen_$(AM_DEFAULT_VERBOSITY))
 orcc_v_gen_0 = @echo "  ORCC   $@";
 
-cp_v_gen = $(cp_v_gen_$(V))
-cp_v_gen_ = $(cp_v_gen_$(AM_DEFAULT_VERBOSITY))
-cp_v_gen_0 = @echo "  CP     $@";
-
 %-orc-gen.c: %.orc
 	@mkdir -p $(@D)
-	$(orcc_v_gen)$(ORCC) --implementation -o $@ $<
+	$(orcc_v_gen)$(ORCC) --no-backup --implementation -o $@ $<
 
 %-orc-gen.h: %.orc
 	@mkdir -p $(@D)
-	$(orcc_v_gen)$(ORCC) --header -o $@ $<
+	$(orcc_v_gen)$(ORCC) --no-backup --header -o $@ $<

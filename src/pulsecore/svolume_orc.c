@@ -73,9 +73,17 @@ static void volume_float32ne_orc(float *samples, float *volumes, unsigned channe
 void pa_volume_func_init_orc(void) {
     pa_log_info("Initialising ORC optimized volume functions.");
 
-    fallback_s16 = pa_get_volume_func(PA_SAMPLE_S16NE);
-    pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_orc);
+    if (pa_volume_s16ne_orc_init()) {
+        pa_log_warn("ORC optimized volume functions could not be compiled.");
+    } else {
+        fallback_s16 = pa_get_volume_func(PA_SAMPLE_S16NE);
+        pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_orc);
+    }
 
-    fallback_float = pa_get_volume_func(PA_SAMPLE_FLOAT32NE);
-    pa_set_volume_func(PA_SAMPLE_FLOAT32NE, (pa_do_volume_func_t) volume_float32ne_orc);
+    if (pa_volume_float32ne_orc_init()) {
+        pa_log_warn("ORC optimized volume functions could not be compiled.");
+    } else {
+        fallback_float = pa_get_volume_func(PA_SAMPLE_FLOAT32NE);
+        pa_set_volume_func(PA_SAMPLE_FLOAT32NE, (pa_do_volume_func_t) volume_float32ne_orc);
+    }
 }

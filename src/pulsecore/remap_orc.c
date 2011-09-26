@@ -69,6 +69,10 @@ static void remap_stereo_swap_orc(pa_remap_t *m, void *dst, const void *src, uns
 }
 
 
+static int remap_mono_to_stereo_orc_init_status;
+static int remap_stereo_to_mono_orc_init_status;
+static int remap_stereo_swap_orc_init_status;
+
 /* set the function that will execute the remapping based on the matrices */
 static void init_remap_orc(pa_remap_t *m) {
     unsigned n_oc, n_ic;
@@ -77,15 +81,18 @@ static void init_remap_orc(pa_remap_t *m) {
     n_ic = m->i_ss->channels;
 
     /* find some common channel remappings, fall back to full matrix operation. */
-    if (n_ic == 1 && n_oc == 2 &&
+    if (!remap_mono_to_stereo_orc_init_status &&
+            n_ic == 1 && n_oc == 2 &&
             m->map_table_f[0][0] >= 1.0 && m->map_table_f[1][0] >= 1.0) {
         m->do_remap = (pa_do_remap_func_t) remap_mono_to_stereo_orc;
         pa_log_info("Using ORC mono to stereo remapping");
-    } else if (n_ic == 2 && n_oc == 1 &&
+    } else if (!remap_stereo_to_mono_orc_init_status &&
+            n_ic == 2 && n_oc == 1 &&
             m->map_table_i[0][0] == 0x8000 && m->map_table_i[0][1] == 0x8000) {
         m->do_remap = (pa_do_remap_func_t) remap_stereo_to_mono_orc;
         pa_log_info("Using ORC stereo to mono remapping");
-    } else if (n_ic == 2 && n_oc == 2 &&
+    } else if (!remap_stereo_swap_orc_init_status &&
+            n_ic == 2 && n_oc == 2 &&
             m->map_table_i[0][0] == 0x00000 && m->map_table_i[0][1] == 0x10000 &&
             m->map_table_i[1][0] == 0x10000 && m->map_table_i[1][1] == 0x00000) {
         m->do_remap = (pa_do_remap_func_t) remap_stereo_swap_orc;
@@ -95,7 +102,11 @@ static void init_remap_orc(pa_remap_t *m) {
 
 void pa_remap_func_init_orc(void) {
     pa_log_info("Initialising ORC optimized remappers.");
-    remap_orc_init();
+    if ((remap_mono_to_stereo_orc_init_status = remap_mono_to_stereo_orc_init()) ||
+        (remap_stereo_to_mono_orc_init_status = remap_stereo_to_mono_orc_init()) ||
+        (remap_stereo_swap_orc_init_status = remap_stereo_swap_orc_init())) {
+        pa_log_warn("ORC optimized remappers could not be compiled.");
+    }
 
     pa_set_init_remap_func((pa_init_remap_func_t) init_remap_orc);
 }
