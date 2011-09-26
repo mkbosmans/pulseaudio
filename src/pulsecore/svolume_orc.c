@@ -31,7 +31,7 @@
 
 #include "cpu-orc.h"
 
-pa_do_volume_func_t fallback;
+static pa_do_volume_func_t fallback_s16, fallback_float;
 
 static void volume_s16ne_orc(int16_t *samples, int32_t *volumes, unsigned channels, unsigned length) {
     if (channels == 2) {
@@ -40,13 +40,24 @@ static void volume_s16ne_orc(int16_t *samples, int32_t *volumes, unsigned channe
     } else if (channels == 1) {
         pa_volume_s16ne_orc_1ch (samples, volumes[0], length / (sizeof(int16_t)));
     } else {
-        fallback(samples, volumes, channels, length);
+        fallback_s16(samples, volumes, channels, length);
+    }
+}
+
+static void volume_float32ne_orc(float *samples, float *volumes, unsigned channels, unsigned length) {
+    if (channels == 1) {
+        pa_volume_float32ne_orc_1ch(samples, volumes[0], length / (sizeof(float)));
+    } else {
+        fallback_float(samples, volumes, channels, length);
     }
 }
 
 void pa_volume_func_init_orc(void) {
     pa_log_info("Initialising ORC optimized volume functions.");
 
-    fallback = pa_get_volume_func(PA_SAMPLE_S16NE);
+    fallback_s16 = pa_get_volume_func(PA_SAMPLE_S16NE);
     pa_set_volume_func(PA_SAMPLE_S16NE, (pa_do_volume_func_t) volume_s16ne_orc);
+
+    fallback_float = pa_get_volume_func(PA_SAMPLE_FLOAT32NE);
+    pa_set_volume_func(PA_SAMPLE_FLOAT32NE, (pa_do_volume_func_t) volume_float32ne_orc);
 }

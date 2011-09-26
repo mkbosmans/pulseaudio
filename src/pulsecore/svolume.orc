@@ -30,12 +30,12 @@
 #     if (sample < 0)
 #          signc = |      0      |      0xffff     | (unsigned)
 #     else
-#          signc = |      0      |        0        | (unsgined)
+#          signc = |      0      |        0        | (unsigned)
 #
 #     if (sample < 0)
-#             ml = |      0      | -((s*vl) >> 16) | (unsgined)
+#             ml = |      0      | -((s*vl) >> 16) | (unsigned)
 #     else
-#             ml = |      0      |   (s*vl) >> 16  | (unsgined)
+#             ml = |      0      |   (s*vl) >> 16  | (unsigned)
 #
 #             vh =               |      v >> 16    | (signed, but value is always signed
 #                                                     since PA_VOLUME_MAX is 0x0fffffff)
@@ -82,3 +82,10 @@ x2 convhlw vh, v
 x2 mulswl mh, samples, vh
 x2 addl ml, ml, mh
 x2 convssslw samples, ml
+
+
+.function pa_volume_float32ne_orc_1ch
+.dest 4 samples float
+.floatparam 4 vol float
+
+mulf samples, samples, vol
