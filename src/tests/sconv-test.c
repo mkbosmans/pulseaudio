@@ -100,17 +100,7 @@ static int do_sconv_test(pa_sample_format_t s_format, pa_sample_format_t d_forma
 
     printf("      %9s -> %9s:\t", pa_sample_format_to_string(s_format), pa_sample_format_to_string(d_format));
 
-    /* Generate random source */
-    if (s_format == PA_SAMPLE_FLOAT32NE) {
-        for (i = 0; i < N_SAMPLES; i++)
-            ((float *) source)[i] = (float) drand48() * 2 - 1;
-    } else if (s_format == PA_SAMPLE_FLOAT32RE) {
-        for (i = 0; i < N_SAMPLES; i++)
-            ((float *) source)[i] = PA_FLOAT32_SWAP((float) drand48() * 2 - 1);
-    } else {
-        for (i = 0; i < pa_sample_size_of_format(s_format) * N_SAMPLES; i++)
-            source[i] = (uint8_t) lrand48();
-    }
+    generate_random_samples(source, s_format, N_SAMPLES);
 
     /* Measure reference and optimized function */
     pa_rtclock_get(&t1);
@@ -168,7 +158,7 @@ int main(int argc, char *argv[]) {
     };
 
     int ret = 0;
-    unsigned c, i;
+    unsigned c;
     struct pa_cpu_info cpu_info;
     pa_sample_format_t f;
     pa_convert_func_t sconv_ref_funcs[PA_SAMPLE_MAX][4];
@@ -188,8 +178,7 @@ int main(int argc, char *argv[]) {
     printf("FROM\tINTERMEDIATE\tTO:\tint16\tfloat\n");
 
     /* Generate random int16 samples and convert directly to float, as reference */
-    for (i = 0; i < N_SAMPLES; i++)
-        i_source[i] = (int16_t) mrand48();
+    generate_random_samples(i_source, PA_SAMPLE_S16NE, N_SAMPLES);
     pa_get_convert_from_s16ne_function(PA_SAMPLE_FLOAT32NE)(N_SAMPLES, i_source, f_source);
 
     for (c = 0; (f = convs[c].format) != PA_SAMPLE_INVALID; c++) {
@@ -201,8 +190,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Generate random float samples and convert directly to int16, as reference */
-    for (i = 0; i < N_SAMPLES; i++)
-        f_source[i] = (float) drand48() * 2 - 1;
+    generate_random_samples(f_source, PA_SAMPLE_FLOAT32NE, N_SAMPLES);
     pa_get_convert_from_float32ne_function(PA_SAMPLE_S16NE)(N_SAMPLES, f_source, i_source);
 
     for (c = 0; (f = convs[c].format) != PA_SAMPLE_INVALID; c++) {

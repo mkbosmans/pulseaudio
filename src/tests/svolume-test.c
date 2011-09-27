@@ -91,18 +91,6 @@ static int compare_samples(const char *name, pa_sample_format_t format, uint8_t 
     return ret;
 }
 
-static void generate_random_samples(uint8_t *samples, pa_sample_format_t format, unsigned n) {
-    unsigned i;
-
-    if (format == PA_SAMPLE_FLOAT32NE) {
-        for (i = 0; i < n; i++)
-            ((float *) samples)[i] = (float) drand48() * 2.0 - 1.0;
-    } else {
-        for (i = 0; i < pa_sample_size_of_format(format) * n; i++)
-            samples[i] = (uint8_t) lrand48();
-    }
-}
-
 static void set_channel_volumes(int32_t *volumes, unsigned channels, pa_bool_t use_fixed, pa_sample_format_t format) {
     unsigned i, padding;
 

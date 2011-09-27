@@ -17,6 +17,8 @@
   USA.
 ***/
 
+#include <stdlib.h>
+
 #include <pulsecore/endianmacros.h>
 
 static PA_GCC_UNUSED void dump_n_samples(const void *samples, pa_sample_format_t format, size_t n_samples, unsigned stride, pa_bool_t align_output) {
@@ -107,5 +109,37 @@ static PA_GCC_UNUSED void dump_channel_samples(const char *str, const void *samp
     for (unsigned c = 0; c < nc; c++) {
         printf("%-12s: ", c > 0 ? "" : str);
         dump_n_samples(((uint8_t *) samples)+c*pa_sample_size_of_format(format), format, n_samples, nc, FALSE);
+    }
+}
+
+/* Generate random samples */
+static PA_GCC_UNUSED void generate_random_samples(void *samples, pa_sample_format_t format, size_t n_samples) {
+    if (format == PA_SAMPLE_FLOAT32NE) {
+        float *u = samples;
+
+        for (; n_samples; n_samples--, u++)
+            *u = (float) drand48() * 2.0 - 1.0;
+
+    } else if (format == PA_SAMPLE_FLOAT32RE) {
+        float *u = samples;
+
+        for (; n_samples; n_samples--, u++) {
+            float v = (float) drand48() * 2.0 - 1.0;
+            *u = PA_FLOAT32_SWAP(v);
+        }
+
+    } else if (format == PA_SAMPLE_S16LE || format == PA_SAMPLE_S16BE) {
+        uint16_t *u = samples;
+
+        for (; n_samples; n_samples--, u++)
+            *u = (uint16_t) lrand48();
+
+    } else {
+        uint8_t *u = samples;
+
+        n_samples *= pa_sample_size_of_format(format);
+        for (; n_samples; n_samples--, u++)
+            *u = (uint8_t) lrand48();
+
     }
 }

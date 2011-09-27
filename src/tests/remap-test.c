@@ -179,10 +179,8 @@ int main(int argc, char *argv[]) {
     remap.i_ss = &i_ss;
     remap.o_ss = &o_ss;
 
-    for (i = 0; i < MAX_CHANNELS*N_SAMPLES; i++) {
-        i_source[i] = (int16_t) mrand48();
-        f_source[i] = (float) drand48() * 2 - 1;
-    }
+    generate_random_samples(i_source, PA_SAMPLE_S16NE, MAX_CHANNELS*N_SAMPLES);
+    generate_random_samples(f_source, PA_SAMPLE_FLOAT32NE, MAX_CHANNELS*N_SAMPLES);
 
     pa_log_set_level(PA_LOG_DEBUG);
 
