@@ -36,6 +36,8 @@
 #include <pulsecore/cpu-orc.h>
 #include <pulsecore/svolume.h>
 
+#include <tests/sample-test-util.h>
+
 #define MAX_CHANNELS 4
 #define N_SAMPLES 9600
 #define REPEAT 500
@@ -71,17 +73,13 @@ static int compare_samples(const char *name, pa_sample_format_t format, uint8_t 
 
     if (format == PA_SAMPLE_S16LE || format == PA_SAMPLE_S16BE) {
         for (i = 0; i < N_SAMPLES * channels; i++) {
-            if (((int16_t *) samples_opt)[i] != ((int16_t *) samples_ref)[i]) {
-                printf("(%s)\t%d: %04x != %04x (%04x * %08x)\n", name, i, ((int16_t *) samples_opt)[i], ((int16_t *) samples_ref)[i], ((int16_t *) samples_orig)[i], volumes[i % channels]);
+            if (((int16_t *) samples_opt)[i] != ((int16_t *) samples_ref)[i])
                 ret++;
-            }
         }
     } else if (format == PA_SAMPLE_FLOAT32LE || format == PA_SAMPLE_FLOAT32BE) {
         for (i = 0; i < N_SAMPLES * channels; i++) {
-            if (fabsf(((float *) samples_opt)[i] - ((float *) samples_ref)[i]) > 1e-8) {
-                printf("(%s)\t%d: %.8f != %.8f (%.8f * %.8f)\n", name, i, ((float *) samples_opt)[i], ((float *) samples_ref)[i], ((float *) samples_orig)[i], (float) volumes[i % channels]);
+            if (fabsf(((float *) samples_opt)[i] - ((float *) samples_ref)[i]) > 1e-8)
                 ret++;
-            }
         }
     } else {
         if (memcmp(samples_opt, samples_ref, pa_sample_size_of_format(format) * N_SAMPLES * channels))
@@ -164,6 +162,8 @@ int main(int argc, char *argv[]) {
 
         for (fixed_volume = 0; fixed_volume <= 1; fixed_volume++) {
             for (channels = 1; channels <= MAX_CHANNELS; channels++) {
+                int fail_asm, fail_orc;
+
                 printf("checking %s - %d channels - %s volume\n", pa_sample_format_to_string(format), channels, fixed_volume ? "fixed" : "random");
                 set_channel_volumes(volumes, channels, fixed_volume, format);
 
@@ -173,11 +173,23 @@ int main(int argc, char *argv[]) {
                 /* func_asm */
                 memcpy(samples_asm, samples_orig, sizeof(samples_orig));
                 svolume_ref_funcs[format][1](samples_asm, volumes, channels, pa_sample_size_of_format(format) * N_SAMPLES * channels);
-                ret += compare_samples("asm", format, samples_orig, samples_ref, samples_asm, volumes, channels);
+                fail_asm = compare_samples("asm", format, samples_orig, samples_ref, samples_asm, volumes, channels);
                 /* func_orc */
                 memcpy(samples_orc, samples_orig, sizeof(samples_orig));
                 svolume_ref_funcs[format][2](samples_orc, volumes, channels, pa_sample_size_of_format(format) * N_SAMPLES * channels);
-                ret += compare_samples("orc", format, samples_orig, samples_ref, samples_orc, volumes, channels);
+                fail_orc = compare_samples("orc", format, samples_orig, samples_ref, samples_orc, volumes, channels);
+
+                if (fail_asm || fail_orc) {
+                    printf("%-12s: ", "volumes");
+                    dump_n_samples(volumes, (format == PA_SAMPLE_FLOAT32LE || format == PA_SAMPLE_FLOAT32BE) ? PA_SAMPLE_FLOAT32NE : PA_SAMPLE_S32NE, channels, 1, FALSE);
+                    dump_channel_samples("orig", samples_orig, format, PA_MIN(N_SAMPLES, 20), channels);
+                    dump_channel_samples("ref", samples_ref, format, PA_MIN(N_SAMPLES, 20), channels);
+                    if (fail_asm)
+                        dump_channel_samples("asm", samples_asm, format, PA_MIN(N_SAMPLES, 20), channels);
+                    if (fail_orc)
+                        dump_channel_samples("orc", samples_orc, format, PA_MIN(N_SAMPLES, 20), channels);
+                }
+                ret += fail_asm + fail_orc;
             }
         }
     }

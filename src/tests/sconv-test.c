@@ -38,6 +38,8 @@
 #include <pulsecore/cpu.h>
 #include <pulsecore/cpu-orc.h>
 
+#include <tests/sample-test-util.h>
+
 #define N_SAMPLES 20000
 #define N_REPEAT 500
 
@@ -52,22 +54,6 @@ static float f_source[N_SAMPLES], f_dest[N_SAMPLES];
 static uint8_t intermediate[4*N_SAMPLES];
 
 /* Compare samples before and after the conversion and print the samples if there is a significant difference */
-static void dump_samples(const char *str, pa_sample_format_t f, const void *samples) {
-#if 0   /* Don't forget to set N_SAMPLES to a lower value when enabling this */
-    printf("%-12s: ", str);
-    if (f == PA_SAMPLE_FLOAT32NE) {
-        for (unsigned i = 0; i < N_SAMPLES; i++)
-            printf("\t%11.8f", ((const float *) samples)[i]);
-    } else {
-        for (unsigned i = 0; i < N_SAMPLES; i++) {
-            printf("\t");
-            for (unsigned b = 0; b < pa_sample_size_of_format(f); b++)
-                printf(" %02x", ((const uint8_t *) samples)[i*pa_sample_size_of_format(f)+b]);
-        }
-    }
-    printf("\n");
-#endif
-}
 static int compare_samples(const char *sf, pa_sample_format_t f, int tolerance_i, float tolerance_f) {
     int max_error_i = 0;
     float max_error_f = 0;
@@ -87,11 +73,16 @@ static int compare_samples(const char *sf, pa_sample_format_t f, int tolerance_i
         max_error_i, max_error_f);
 
     if (fail_i || fail_f) {
-        dump_samples("    input s16", PA_SAMPLE_S16NE, i_source);
-        dump_samples("    output s16", PA_SAMPLE_S16NE, i_dest);
-        dump_samples("    input float", PA_SAMPLE_FLOAT32NE, f_source);
-        dump_samples("    output float", PA_SAMPLE_FLOAT32NE, f_dest);
-        dump_samples("    intermediate", f, intermediate);
+        printf("    %-12s: ", "input s16");
+        dump_n_samples(i_source, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 16), 1, TRUE);
+        printf("    %-12s: ", "output s16");
+        dump_n_samples(i_dest, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 16), 1, TRUE);
+        printf("    %-12s: ", "input float");
+        dump_n_samples(f_source, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 16), 1, TRUE);
+        printf("    %-12s: ", "output float");
+        dump_n_samples(f_dest, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 16), 1, TRUE);
+        printf("    %-12s: ", "intermediate");
+        dump_n_samples(intermediate, f, PA_MIN(N_SAMPLES, 16), 1, TRUE);
     }
 
     return fail_i + fail_f;

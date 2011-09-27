@@ -31,79 +31,17 @@
 #include <pulsecore/memblock.h>
 #include <pulsecore/sample-util.h>
 
+#include <tests/sample-test-util.h>
+
 static void dump_block(const pa_sample_spec *ss, const pa_memchunk *chunk) {
     void *d;
-    unsigned i;
 
     if (getenv("MAKE_CHECK"))
         return;
 
     d = pa_memblock_acquire(chunk->memblock);
 
-    switch (ss->format) {
-
-        case PA_SAMPLE_U8:
-        case PA_SAMPLE_ULAW:
-        case PA_SAMPLE_ALAW: {
-            uint8_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("0x%02x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S16NE:
-        case PA_SAMPLE_S16RE: {
-            uint16_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("0x%04x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S24_32NE:
-        case PA_SAMPLE_S24_32RE:
-        case PA_SAMPLE_S32NE:
-        case PA_SAMPLE_S32RE: {
-            uint32_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("0x%08x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S24NE:
-        case PA_SAMPLE_S24RE: {
-            uint8_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++) {
-                printf("0x%02x%02x%02xx ", *u, *(u+1), *(u+2));
-                u += 3;
-            }
-
-            break;
-        }
-
-        case PA_SAMPLE_FLOAT32NE:
-        case PA_SAMPLE_FLOAT32RE: {
-            float *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++) {
-                printf("%1.5f ",  ss->format == PA_SAMPLE_FLOAT32NE ? *u : PA_FLOAT32_SWAP(*u));
-                u++;
-            }
-
-            break;
-        }
-
-        default:
-            pa_assert_not_reached();
-    }
-
-    printf("\n");
+    dump_n_samples(d, ss->format, chunk->length / pa_frame_size(ss), 1, FALSE);
 
     pa_memblock_release(chunk->memblock);
 }

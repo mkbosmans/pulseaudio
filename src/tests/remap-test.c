@@ -36,6 +36,8 @@
 #include <pulsecore/cpu.h>
 #include <pulsecore/cpu-orc.h>
 
+#include <tests/sample-test-util.h>
+
 #define MAX_CHANNELS 6
 #define N_SAMPLES 16000
 #define N_REPEAT 300
@@ -118,40 +120,20 @@ static void do_remap(pa_remap_t *remap, pa_sample_format_t *format, int16_t *i_d
 }
 
 /* Compare results against reference implementation and print the samples if there is a difference */
-static void dump_samples(const char *str, const int16_t *samples, unsigned nc) {
-#if 0
-    for (unsigned c = 0; c < nc; c++) {
-        printf("%-12s: ", c > 0 ? "" : str);
-        for (unsigned i = 0; i < N_SAMPLES; i++)
-            printf("  0x%04x", (uint16_t) samples[i*nc+c]);
-        printf("\n");
-    }
-#endif
-}
-static void dump_samples_f(const char *str, const float *samples, unsigned nc) {
-#if 0
-    for (unsigned c = 0; c < nc; c++) {
-        printf("%-12s: ", c > 0 ? "" : str);
-        for (unsigned i = 0; i < N_SAMPLES; i++)
-            printf(" %8.5f", samples[i*nc+c]);
-        printf("\n");
-    }
-#endif
-}
 static int compare_result_to_reference(unsigned n_ic, unsigned n_oc) {
     for (unsigned i = 0; i < n_oc * N_SAMPLES; i++) {
         if (abs(i_dest[i] - i_dest_ref[i]) > 1) {
             printf("FAIL\n");
-            dump_samples("input", i_source, n_ic);
-            dump_samples("reference", i_dest_ref, n_oc);
-            dump_samples("output", i_dest, n_oc);
+            dump_channel_samples("input", i_source, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_ic);
+            dump_channel_samples("reference", i_dest_ref, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_oc);
+            dump_channel_samples("output", i_dest, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_oc);
             return 1;
         }
         if (fabsf(f_dest[i] - f_dest_ref[i]) > 1e-6) {
             printf("FAIL\n");
-            dump_samples_f("input", f_source, n_ic);
-            dump_samples_f("reference", f_dest_ref, n_oc);
-            dump_samples_f("output", f_dest, n_oc);
+            dump_channel_samples("input", f_source, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_ic);
+            dump_channel_samples("reference", f_dest_ref, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_oc);
+            dump_channel_samples("output", f_dest, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_oc);
             return 1;
         }
     }

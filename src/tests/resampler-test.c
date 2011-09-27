@@ -25,10 +25,9 @@
 #include <getopt.h>
 #include <locale.h>
 
-#include <pulse/pulseaudio.h>
-
 #include <pulse/rtclock.h>
 #include <pulse/sample.h>
+#include <pulse/timeval.h>
 #include <pulse/volume.h>
 
 #include <pulsecore/i18n.h>
@@ -40,9 +39,10 @@
 #include <pulsecore/sample-util.h>
 #include <pulsecore/core-util.h>
 
+#include <tests/sample-test-util.h>
+
 static void dump_block(const char *label, const pa_sample_spec *ss, const pa_memchunk *chunk) {
     void *d;
-    unsigned i;
 
     if (getenv("MAKE_CHECK"))
         return;
@@ -50,78 +50,7 @@ static void dump_block(const char *label, const pa_sample_spec *ss, const pa_mem
 
     d = pa_memblock_acquire(chunk->memblock);
 
-    switch (ss->format) {
-
-        case PA_SAMPLE_U8:
-        case PA_SAMPLE_ULAW:
-        case PA_SAMPLE_ALAW: {
-            uint8_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("      0x%02x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S16NE:
-        case PA_SAMPLE_S16RE: {
-            uint16_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("    0x%04x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S32NE:
-        case PA_SAMPLE_S32RE: {
-            uint32_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("0x%08x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_S24_32NE:
-        case PA_SAMPLE_S24_32RE: {
-            uint32_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++)
-                printf("0x%08x ", *(u++));
-
-            break;
-        }
-
-        case PA_SAMPLE_FLOAT32NE:
-        case PA_SAMPLE_FLOAT32RE: {
-            float *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++) {
-                printf("%4.3g ", ss->format == PA_SAMPLE_FLOAT32NE ? *u : PA_FLOAT32_SWAP(*u));
-                u++;
-            }
-
-            break;
-        }
-
-        case PA_SAMPLE_S24LE:
-        case PA_SAMPLE_S24BE: {
-            uint8_t *u = d;
-
-            for (i = 0; i < chunk->length / pa_frame_size(ss); i++) {
-                printf("  0x%06x ", PA_READ24NE(u));
-                u += pa_frame_size(ss);
-            }
-
-            break;
-        }
-
-        default:
-            pa_assert_not_reached();
-    }
-
-    printf("\n");
+    dump_n_samples(d, ss->format, chunk->length / pa_frame_size(ss), 1, TRUE);
 
     pa_memblock_release(chunk->memblock);
 }
