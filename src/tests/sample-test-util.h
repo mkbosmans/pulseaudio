@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <pulse/timeval.h>
+
+#include <pulsecore/core-rtclock.h>
 #include <pulsecore/endianmacros.h>
 
 static PA_GCC_UNUSED void dump_n_samples(const void *samples, pa_sample_format_t format, size_t n_samples, unsigned stride, pa_bool_t align_output) {
@@ -262,4 +265,31 @@ static PA_GCC_UNUSED uint32_t compare_samples(const void *samples, const void *s
     }
 
     return max_error;
+}
+
+/* Macros for timing the performance of code */
+#define INIT_TIMED_TEST(n_outer)                                        \
+{                                                                       \
+    double TT_time, TT_n_outer = n_outer;                               \
+    double TT_min = 1e9, TT_max = 0.0, TT_sum = 0.0, TT_sum2 = 0.0;     \
+    struct timeval TT_t1, TT_t2;                                        \
+    for (int TT_i_outer = 0; TT_i_outer < n_outer; TT_i_outer++) {
+
+#define START_TIMED_TEST(n_inner)                                       \
+        pa_rtclock_get(&TT_t1);                                         \
+        for (int TT_i_inner = 0; TT_i_inner < n_inner; TT_i_inner++) {
+
+#define END_TIMED_TEST(avg_var, min_var, max_var, stddev_var)           \
+        }                                                               \
+        pa_rtclock_get(&TT_t2);                                         \
+        TT_time = (double) pa_timeval_diff(&TT_t1, &TT_t2) / 1000.0;    \
+        TT_min = PA_MIN(TT_min, TT_time);                               \
+        TT_max = PA_MAX(TT_max, TT_time);                               \
+        TT_sum += TT_time;                                              \
+        TT_sum2 += TT_time * TT_time;                                   \
+    }                                                                   \
+    stddev_var = sqrt(TT_sum2*TT_n_outer - TT_sum*TT_sum) / TT_n_outer; \
+    min_var = TT_min;                                                   \
+    max_var = TT_max;                                                   \
+    avg_var = TT_sum / TT_n_outer;                                      \
 }

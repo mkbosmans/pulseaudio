@@ -26,11 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 
-#include <pulse/timeval.h>
-
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/endianmacros.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/sconv.h>
@@ -90,9 +86,7 @@ static int do_sconv_test(pa_sample_format_t s_format, pa_sample_format_t d_forma
     static uint8_t dest[4*N_SAMPLES];
     static uint8_t ref[4*N_SAMPLES];
 
-    struct timeval t1, t2;
-    pa_usec_t t_ref, t_opt;
-    unsigned i;
+    double t_ref, t_opt;
     int ret = 0;
 
     printf("      %9s -> %9s:\t", pa_sample_format_to_string(s_format), pa_sample_format_to_string(d_format));
@@ -100,17 +94,15 @@ static int do_sconv_test(pa_sample_format_t s_format, pa_sample_format_t d_forma
     generate_random_samples(source, s_format, N_SAMPLES);
 
     /* Measure reference and optimized function */
-    pa_rtclock_get(&t1);
-    for (i = 0; i < N_REPEAT; i++)
+    INIT_TIMED_TEST(4)
+    START_TIMED_TEST(N_REPEAT)
         ref_func(N_SAMPLES, source, ref);
-    pa_rtclock_get(&t2);
-    t_ref = pa_timeval_diff(&t1, &t2);
+    END_TIMED_TEST(t_ref, t_ref, t_ref, t_ref)
 
-    pa_rtclock_get(&t1);
-    for (i = 0; i < N_REPEAT; i++)
+    INIT_TIMED_TEST(4)
+    START_TIMED_TEST(N_REPEAT)
         opt_func(N_SAMPLES, source, dest);
-    pa_rtclock_get(&t2);
-    t_opt = pa_timeval_diff(&t1, &t2);
+    END_TIMED_TEST(t_opt, t_opt, t_opt, t_opt)
 
     if (ref_func == opt_func) {
         printf("N/A");
@@ -125,7 +117,7 @@ static int do_sconv_test(pa_sample_format_t s_format, pa_sample_format_t d_forma
             ret++;
         }
     }
-    printf("\t\t[%6.1f ms,%6.1f ms]\n", (float) t_ref / 1000, (float) t_opt / 1000);
+    printf("\t\t[%6.1f ms,%6.1f ms]\n", t_ref, t_opt);
 
     return ret;
 }

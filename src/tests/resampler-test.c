@@ -27,7 +27,6 @@
 
 #include <pulse/rtclock.h>
 #include <pulse/sample.h>
-#include <pulse/timeval.h>
 #include <pulse/volume.h>
 
 #include <pulsecore/i18n.h>

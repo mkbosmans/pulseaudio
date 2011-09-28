@@ -26,9 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-#include <pulse/rtclock.h>
 #include <pulse/volume.h>
 
 #include <pulsecore/macro.h>
@@ -45,26 +43,15 @@
 #define PADDING 16
 
 static void do_svolume_perf_test(pa_do_volume_func_t func, const char *name, uint8_t *samples_orig, uint8_t *samples, int32_t *volumes, unsigned channels, size_t length) {
-    int j, k;
-    pa_usec_t start, stop;
-    double time; /* in ms */
-    double min = 1e9, max = 0, avg1 = 0, avg2 = 0;
+    double avg, min, max, stddev;
 
-    for (k = 0; k < TIMES; k++) {
+    INIT_TIMED_TEST(TIMES)
         memcpy(samples, samples_orig, length);
-        start = pa_rtclock_now();
-        for (j = 0; j < REPEAT; j++)
-            func(samples, volumes, channels, length);
-        stop = pa_rtclock_now();
-        time = (stop - start) / 1000.0;
+    START_TIMED_TEST(REPEAT)
+        func(samples, volumes, channels, length);
+    END_TIMED_TEST(avg, min, max, stddev)
 
-        min = PA_MIN(min, time);
-        max = PA_MAX(max, time);
-        avg1 += time / (double) TIMES;
-        avg2 += time * time / (double) TIMES;
-    }
-
-    pa_log_info("\t%s:%6.1f ms\t(min =%6.1f, max =%6.1f, stddev =%5.1f)", name, avg1, min, max, sqrt(avg2 - avg1 * avg1));
+    pa_log_info("\t%s:%6.1f ms\t(min =%6.1f, max =%6.1f, stddev =%5.1f)", name, avg, min, max, stddev);
 }
 
 static void set_channel_volumes(int32_t *volumes, unsigned channels, pa_bool_t use_fixed, pa_sample_format_t format) {

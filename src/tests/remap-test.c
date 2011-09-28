@@ -25,11 +25,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 
-#include <pulse/timeval.h>
-
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/remap.h>
 #include <pulsecore/cpu.h>
@@ -95,27 +91,18 @@ static void init_remap_reference(pa_remap_t *m) {
 
 static void init_remap_fallback(pa_remap_t *m) {}
 
-/* Do an int16 and a float remap into the specified destination array */
-static void do_remap(pa_remap_t *remap, pa_sample_format_t *format, int16_t *i_d, float *f_d) {
-    struct timeval t1, t2;
+/* Do an int16 or a float remap into the specified destination array */
+static void do_remap(pa_remap_t *remap, void *source, void *dest, pa_sample_format_t format) {
+    double avg, min, max, stddev;
 
-    *format = PA_SAMPLE_S16NE;
     pa_init_remap(remap);
-    memset(i_d, 0, N_SAMPLES * (remap->o_ss->channels) * sizeof(int16_t));
-    pa_rtclock_get(&t1);
-    for (int i = 0; i < N_REPEAT; i++)
-        remap->do_remap(remap, i_d, i_source, N_SAMPLES);
-    pa_rtclock_get(&t2);
-    printf("Elapsed: %8.1f ms\n", (float) pa_timeval_diff(&t1, &t2) / 1000);
+    INIT_TIMED_TEST(10)
+        memset(dest, 0, N_SAMPLES * (remap->o_ss->channels) * pa_sample_size_of_format(format));
+    START_TIMED_TEST(N_REPEAT)
+        remap->do_remap(remap, dest, source, N_SAMPLES);
+    END_TIMED_TEST(avg, min, max, stddev)
 
-    *format = PA_SAMPLE_FLOAT32NE;
-    pa_init_remap(remap);
-    memset(f_d, 0, N_SAMPLES * (remap->o_ss->channels) * sizeof(float));
-    pa_rtclock_get(&t1);
-    for (int i = 0; i < N_REPEAT; i++)
-        remap->do_remap(remap, f_d, f_source, N_SAMPLES);
-    pa_rtclock_get(&t2);
-    printf("Elapsed: %8.1f ms\n", (float) pa_timeval_diff(&t1, &t2) / 1000);
+    printf("\t%6.1f ms\t(min =%6.1f, max =%6.1f, stddev =%5.1f)\n", avg, min, max, stddev);
 }
 
 /* Compare results against reference implementation and print the samples if there is a difference */
@@ -193,11 +180,17 @@ int main(int argc, char *argv[]) {
 
         /* Use reference remap function implementation */
         pa_set_init_remap_func((pa_init_remap_func_t) init_remap_reference);
-        do_remap(&remap, &format, i_dest_ref, f_dest_ref);
+        format = PA_SAMPLE_S16NE;
+        do_remap(&remap, i_source, i_dest_ref, format);
+        format = PA_SAMPLE_FLOAT32NE;
+        do_remap(&remap, f_source, f_dest_ref, format);
 
         /* Use c remap functions */
         pa_set_init_remap_func((pa_init_remap_func_t) init_remap_fallback);
-        do_remap(&remap, &format, i_dest, f_dest);
+        format = PA_SAMPLE_S16NE;
+        do_remap(&remap, i_source, i_dest, format);
+        format = PA_SAMPLE_FLOAT32NE;
+        do_remap(&remap, f_source, f_dest, format);
         ret += compare_result_to_reference(i_source, i_dest_ref, i_dest, PA_SAMPLE_S16NE, n_ic, n_oc, 1);
         ret += compare_result_to_reference(f_source, f_dest_ref, f_dest, PA_SAMPLE_FLOAT32NE, n_ic, n_oc, 2);
 
@@ -210,7 +203,10 @@ int main(int argc, char *argv[]) {
             cpu_info.cpu_type = PA_CPU_ARM;
         pa_cpu_init_orc(cpu_info);
         pa_log_set_level(PA_LOG_DEBUG);
-        do_remap(&remap, &format, i_dest, f_dest);
+        format = PA_SAMPLE_S16NE;
+        do_remap(&remap, i_source, i_dest, format);
+        format = PA_SAMPLE_FLOAT32NE;
+        do_remap(&remap, f_source, f_dest, format);
         ret += compare_result_to_reference(i_source, i_dest_ref, i_dest, PA_SAMPLE_S16NE, n_ic, n_oc, 1);
         ret += compare_result_to_reference(f_source, f_dest_ref, f_dest, PA_SAMPLE_FLOAT32NE, n_ic, n_oc, 2);
     }
