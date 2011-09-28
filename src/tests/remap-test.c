@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <sys/time.h>
 
 #include <pulse/timeval.h>
@@ -120,22 +119,13 @@ static void do_remap(pa_remap_t *remap, pa_sample_format_t *format, int16_t *i_d
 }
 
 /* Compare results against reference implementation and print the samples if there is a difference */
-static int compare_result_to_reference(unsigned n_ic, unsigned n_oc) {
-    for (unsigned i = 0; i < n_oc * N_SAMPLES; i++) {
-        if (abs(i_dest[i] - i_dest_ref[i]) > 1) {
-            printf("FAIL\n");
-            dump_channel_samples("input", i_source, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_ic);
-            dump_channel_samples("reference", i_dest_ref, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_oc);
-            dump_channel_samples("output", i_dest, PA_SAMPLE_S16NE, PA_MIN(N_SAMPLES, 20), n_oc);
-            return 1;
-        }
-        if (fabsf(f_dest[i] - f_dest_ref[i]) > 1e-6) {
-            printf("FAIL\n");
-            dump_channel_samples("input", f_source, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_ic);
-            dump_channel_samples("reference", f_dest_ref, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_oc);
-            dump_channel_samples("output", f_dest, PA_SAMPLE_FLOAT32NE, PA_MIN(N_SAMPLES, 20), n_oc);
-            return 1;
-        }
+static int compare_result_to_reference(void *source, void *dest_ref, void *dest, pa_sample_format_t format, unsigned n_ic, unsigned n_oc, unsigned max_error) {
+    if (compare_samples(dest, dest_ref, format, n_oc * N_SAMPLES) > max_error) {
+        printf("FAIL\n");
+        dump_channel_samples("input", source, format, PA_MIN(N_SAMPLES, 20), n_ic);
+        dump_channel_samples("reference", dest_ref, format, PA_MIN(N_SAMPLES, 20), n_oc);
+        dump_channel_samples("output", dest, format, PA_MIN(N_SAMPLES, 20), n_oc);
+        return 1;
     }
     return 0;
 }
@@ -208,7 +198,8 @@ int main(int argc, char *argv[]) {
         /* Use c remap functions */
         pa_set_init_remap_func((pa_init_remap_func_t) init_remap_fallback);
         do_remap(&remap, &format, i_dest, f_dest);
-        ret += compare_result_to_reference(n_ic, n_oc);
+        ret += compare_result_to_reference(i_source, i_dest_ref, i_dest, PA_SAMPLE_S16NE, n_ic, n_oc, 1);
+        ret += compare_result_to_reference(f_source, f_dest_ref, f_dest, PA_SAMPLE_FLOAT32NE, n_ic, n_oc, 2);
 
         /* Use optimized remap functions */
         pa_log_set_level(PA_LOG_ERROR);
@@ -220,7 +211,8 @@ int main(int argc, char *argv[]) {
         pa_cpu_init_orc(cpu_info);
         pa_log_set_level(PA_LOG_DEBUG);
         do_remap(&remap, &format, i_dest, f_dest);
-        ret += compare_result_to_reference(n_ic, n_oc);
+        ret += compare_result_to_reference(i_source, i_dest_ref, i_dest, PA_SAMPLE_S16NE, n_ic, n_oc, 1);
+        ret += compare_result_to_reference(f_source, f_dest_ref, f_dest, PA_SAMPLE_FLOAT32NE, n_ic, n_oc, 2);
     }
 
     return ret;

@@ -67,30 +67,6 @@ static void do_svolume_perf_test(pa_do_volume_func_t func, const char *name, uin
     pa_log_info("\t%s:%6.1f ms\t(min =%6.1f, max =%6.1f, stddev =%5.1f)", name, avg1, min, max, sqrt(avg2 - avg1 * avg1));
 }
 
-static int compare_samples(const char *name, pa_sample_format_t format, uint8_t *samples_orig, uint8_t *samples_ref, uint8_t *samples_opt, int32_t *volumes, unsigned channels) {
-    int ret = 0;
-    unsigned i;
-
-    if (format == PA_SAMPLE_S16LE || format == PA_SAMPLE_S16BE) {
-        for (i = 0; i < N_SAMPLES * channels; i++) {
-            if (((int16_t *) samples_opt)[i] != ((int16_t *) samples_ref)[i])
-                ret++;
-        }
-    } else if (format == PA_SAMPLE_FLOAT32LE || format == PA_SAMPLE_FLOAT32BE) {
-        for (i = 0; i < N_SAMPLES * channels; i++) {
-            if (fabsf(((float *) samples_opt)[i] - ((float *) samples_ref)[i]) > 1e-8)
-                ret++;
-        }
-    } else {
-        if (memcmp(samples_opt, samples_ref, pa_sample_size_of_format(format) * N_SAMPLES * channels))
-            ret++;
-    }
-
-    if (ret)
-        printf("%s not identical to reference\n", name);
-    return ret;
-}
-
 static void set_channel_volumes(int32_t *volumes, unsigned channels, pa_bool_t use_fixed, pa_sample_format_t format) {
     unsigned i, padding;
 
@@ -161,11 +137,11 @@ int main(int argc, char *argv[]) {
                 /* func_asm */
                 memcpy(samples_asm, samples_orig, sizeof(samples_orig));
                 svolume_ref_funcs[format][1](samples_asm, volumes, channels, pa_sample_size_of_format(format) * N_SAMPLES * channels);
-                fail_asm = compare_samples("asm", format, samples_orig, samples_ref, samples_asm, volumes, channels);
+                fail_asm = (compare_samples(samples_asm, samples_ref, format, N_SAMPLES * channels) > 0);
                 /* func_orc */
                 memcpy(samples_orc, samples_orig, sizeof(samples_orig));
                 svolume_ref_funcs[format][2](samples_orc, volumes, channels, pa_sample_size_of_format(format) * N_SAMPLES * channels);
-                fail_orc = compare_samples("orc", format, samples_orig, samples_ref, samples_orc, volumes, channels);
+                fail_orc = (compare_samples(samples_orc, samples_ref, format, N_SAMPLES * channels) > 0);
 
                 if (fail_asm || fail_orc) {
                     printf("%-12s: ", "volumes");

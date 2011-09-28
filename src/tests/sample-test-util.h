@@ -18,6 +18,7 @@
 ***/
 
 #include <stdlib.h>
+#include <math.h>
 
 #include <pulsecore/endianmacros.h>
 
@@ -142,4 +143,38 @@ static PA_GCC_UNUSED void generate_random_samples(void *samples, pa_sample_forma
             *u = (uint8_t) lrand48();
 
     }
+}
+
+/* Compare two sets of samples and return the greatest difference */
+static PA_GCC_UNUSED uint32_t compare_samples(const void *samples, const void *samples_ref, pa_sample_format_t format, size_t n_samples) {
+    uint32_t max_error = 0;
+
+    if (format == PA_SAMPLE_FLOAT32NE) {
+        const float *u1 = samples, *u2 = samples_ref;
+        float max_error_f = 0.0f;
+
+        for (unsigned i = 0; i < n_samples; i++)
+            max_error_f = PA_MAX(max_error_f, fabsf(u1[i] - u2[i]));
+
+        max_error = (uint32_t) (max_error_f * (float) 0x1000000);
+
+    } else if (format == PA_SAMPLE_S16NE) {
+        const int16_t *u1 = samples, *u2 = samples_ref;
+
+        for (unsigned i = 0; i < n_samples; i++)
+            max_error = PA_MAX(max_error, (uint32_t) abs(u1[i] - u2[i]));
+
+    } else if (format == PA_SAMPLE_S16RE) {
+        const int16_t *u1 = samples, *u2 = samples_ref;
+
+        for (unsigned i = 0; i < n_samples; i++)
+            max_error = PA_MAX(max_error, (uint32_t) abs(PA_INT16_SWAP(u1[i]) - PA_INT16_SWAP(u2[i])));
+
+    } else {
+        /* Don't bother */
+        if (memcmp(samples, samples_ref, pa_sample_size_of_format(format) * n_samples))
+            max_error = 255;
+    }
+
+    return max_error;
 }

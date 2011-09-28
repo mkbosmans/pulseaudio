@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <sys/time.h>
 
 #include <pulse/timeval.h>
@@ -54,15 +53,13 @@ static float f_source[N_SAMPLES], f_dest[N_SAMPLES];
 static uint8_t intermediate[4*N_SAMPLES];
 
 /* Compare samples before and after the conversion and print the samples if there is a significant difference */
-static int compare_samples(const char *sf, pa_sample_format_t f, int tolerance_i, float tolerance_f) {
-    int max_error_i = 0;
-    float max_error_f = 0;
+static int compare_dest_to_source(const char *sf, pa_sample_format_t f, int tolerance_i, float tolerance_f) {
+    int max_error_i;
+    float max_error_f;
     int fail_i, fail_f;
 
-    for (unsigned i = 0; i < N_SAMPLES; i++) {
-        max_error_i = PA_MAX(max_error_i, abs(i_dest[i] - i_source[i]));
-        max_error_f = PA_MAX(max_error_f, fabsf(f_dest[i] - f_source[i]));
-    }
+    max_error_i = compare_samples(i_dest, i_source, PA_SAMPLE_S16NE, N_SAMPLES);
+    max_error_f = (float) compare_samples(f_dest, f_source, PA_SAMPLE_FLOAT32NE, N_SAMPLES) / (float) 0x1000000;
 
     fail_i = (max_error_i > tolerance_i);
     fail_f = (max_error_f > tolerance_f);
@@ -117,21 +114,16 @@ static int do_sconv_test(pa_sample_format_t s_format, pa_sample_format_t d_forma
 
     if (ref_func == opt_func) {
         printf("N/A");
-    } else if (memcmp(ref, dest, pa_sample_size_of_format(d_format) * N_SAMPLES)) {
-        printf("FAIL");
-        ret++;
-        if (d_format == PA_SAMPLE_S16LE || d_format == PA_SAMPLE_S16BE) {
-            int max_error_i = 0;
-            for (i = 0; i < N_SAMPLES; i++)
-                max_error_i = PA_MAX(max_error_i, d_format == PA_SAMPLE_S16NE ? abs(((int16_t*) dest)[i] - ((int16_t*) ref)[i]) :
-                                                  abs(PA_INT16_SWAP(((int16_t*) dest)[i]) - PA_INT16_SWAP(((int16_t*) ref)[i])));
-            if (max_error_i <= 1) {
-                printf("~OK");
-                ret--;
-            }
-        }
     } else {
-        printf("OK");
+        int sample_error = compare_samples(dest, ref, d_format, N_SAMPLES);
+        if (sample_error == 0) {
+            printf("OK");
+        } else if (sample_error == 1) {
+            printf("~OK");
+        } else {
+            printf("FAIL");
+            ret++;
+        }
     }
     printf("\t\t[%6.1f ms,%6.1f ms]\n", (float) t_ref / 1000, (float) t_opt / 1000);
 
@@ -186,7 +178,7 @@ int main(int argc, char *argv[]) {
         pa_get_convert_to_s16ne_function(f)(N_SAMPLES, intermediate, i_dest);
         pa_get_convert_to_float32ne_function(f)(N_SAMPLES, intermediate, f_dest);
 
-        ret += compare_samples("int16", f, convs[c].int_int_tolerance, convs[c].int_float_tolerance);
+        ret += compare_dest_to_source("int16", f, convs[c].int_int_tolerance, convs[c].int_float_tolerance);
     }
 
     /* Generate random float samples and convert directly to int16, as reference */
@@ -198,7 +190,7 @@ int main(int argc, char *argv[]) {
         pa_get_convert_to_float32ne_function(f)(N_SAMPLES, intermediate, f_dest);
         pa_get_convert_to_s16ne_function(f)(N_SAMPLES, intermediate, i_dest);
 
-        ret += compare_samples("float", f, convs[c].float_int_tolerance, convs[c].float_float_tolerance);
+        ret += compare_dest_to_source("float", f, convs[c].float_int_tolerance, convs[c].float_float_tolerance);
     }
 
     /* Now we can check the correctness and performance of the optimized implementations.
