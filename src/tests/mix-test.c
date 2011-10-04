@@ -29,6 +29,8 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/endianmacros.h>
 #include <pulsecore/memblock.h>
+#include <pulsecore/memchunk.h>
+#include <pulsecore/mix.h>
 #include <pulsecore/sample-util.h>
 
 #include <tests/sample-test-util.h>

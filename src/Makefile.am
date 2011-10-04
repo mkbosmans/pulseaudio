@@ -818,6 +818,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/g711.c pulsecore/g711.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
+		pulsecore/mix.c pulsecore/mix.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
 		pulsecore/module.c pulsecore/module.h \

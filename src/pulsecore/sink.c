@@ -41,6 +41,7 @@
 #include <pulsecore/sink-input.h>
 #include <pulsecore/namereg.h>
 #include <pulsecore/core-util.h>
+#include <pulsecore/mix.h>
 #include <pulsecore/sample-util.h>
 #include <pulsecore/core-subscribe.h>
 #include <pulsecore/log.h>

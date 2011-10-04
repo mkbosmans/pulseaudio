@@ -29,13 +29,14 @@
 #include <pulse/xmalloc.h>
 
 #include <pulsecore/i18n.h>
+#include <pulsecore/core-util.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/namereg.h>
 #include <pulsecore/sink.h>
 #include <pulsecore/module.h>
-#include <pulsecore/core-util.h>
 #include <pulsecore/modargs.h>
 #include <pulsecore/log.h>
+#include <pulsecore/mix.h>
 #include <pulsecore/rtpoll.h>
 #include <pulsecore/sample-util.h>
 #include <pulsecore/ltdl-helper.h>
@@ -327,8 +328,7 @@ static void source_output_push_cb(pa_source_output *o, const pa_memchunk *chunk)
         streams[1].volume.channels = o->sample_spec.channels;
 
         /* do mixing */
-        pa_mix(streams,                /* 2 streams to be mixed */
-               2,
+        pa_mix(streams, 2,             /* 2 streams to be mixed */
                target,                 /* put result in target chunk */
                chunk->length,          /* same length as input */
                (const pa_sample_spec *)&o->sample_spec, /* same sample spec for input and output */
