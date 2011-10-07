@@ -34,6 +34,7 @@ void pa_cpu_init_orc(pa_cpu_info cpu_info)
     /* Enable Orc optimizations */
     if ((cpu_info.cpu_type == PA_CPU_X86) && (cpu_info.flags.x86 & x86_want_flags)) {
         pa_volume_func_init_orc();
+        pa_mix_func_init_orc();
         pa_remap_func_init_orc();
         pa_convert_func_init_orc();
     }

@@ -860,14 +860,17 @@ libpulsecore_@PA_MAJORMINOR@_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) $(LIBSAMPLERATE
 
 if HAVE_ORC
 ORC_SOURCE += \
+		pulsecore/mix \
 		pulsecore/remap \
 		pulsecore/sconv \
 		pulsecore/svolume
 libpulsecore_@PA_MAJORMINOR@_la_SOURCES += \
+		pulsecore/mix_orc.c \
 		pulsecore/remap_orc.c \
 		pulsecore/sconv_orc.c \
 		pulsecore/svolume_orc.c
 nodist_libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
+		pulsecore/mix-orc-gen.c pulsecore/mix-orc-gen.h \
 		pulsecore/remap-orc-gen.c pulsecore/remap-orc-gen.h \
 		pulsecore/sconv-orc-gen.c pulsecore/sconv-orc-gen.h \
 		pulsecore/svolume-orc-gen.c pulsecore/svolume-orc-gen.h
