@@ -45,4 +45,9 @@ size_t pa_mix(
     const pa_cvolume *volume,
     pa_bool_t mute);
 
+typedef void (*pa_mix_func_t) (void *volumes, unsigned nstreams, unsigned nchannels, const void *src[], void *dest, size_t length);
+
+pa_mix_func_t pa_get_mix_func(pa_sample_format_t f);
+void pa_set_mix_func(pa_sample_format_t f, pa_mix_func_t func);
+
 #endif

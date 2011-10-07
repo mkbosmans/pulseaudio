@@ -39,38 +39,34 @@
 #include "mix.h"
 #include "mix_c.c"
 
-static void calc_linear_integer_stream_volumes(pa_mix_info streams[], int32_t linear_volume[][PA_CHANNELS_MAX], unsigned nstreams, const pa_cvolume *volume) {
-    unsigned k, channel, nchannels;
-    double linear[PA_CHANNELS_MAX];
+static pa_mix_func_t mix_table[] = {
+    [PA_SAMPLE_U8]        = (pa_mix_func_t) mix_u8_c,
+    [PA_SAMPLE_ALAW]      = (pa_mix_func_t) mix_alaw_c,
+    [PA_SAMPLE_ULAW]      = (pa_mix_func_t) mix_ulaw_c,
+    [PA_SAMPLE_S16NE]     = (pa_mix_func_t) mix_s16ne_c,
+    [PA_SAMPLE_S16RE]     = (pa_mix_func_t) mix_s16re_c,
+    [PA_SAMPLE_FLOAT32NE] = (pa_mix_func_t) mix_float32ne_c,
+    [PA_SAMPLE_FLOAT32RE] = (pa_mix_func_t) mix_float32re_c,
+    [PA_SAMPLE_S32NE]     = (pa_mix_func_t) mix_s32ne_c,
+    [PA_SAMPLE_S32RE]     = (pa_mix_func_t) mix_s32re_c,
+    [PA_SAMPLE_S24NE]     = (pa_mix_func_t) mix_s24ne_c,
+    [PA_SAMPLE_S24RE]     = (pa_mix_func_t) mix_s24re_c,
+    [PA_SAMPLE_S24_32NE]  = (pa_mix_func_t) mix_s24_32ne_c,
+    [PA_SAMPLE_S24_32RE]  = (pa_mix_func_t) mix_s24_32re_c
+};
 
-    nchannels = volume->channels;
+pa_mix_func_t pa_get_mix_func(pa_sample_format_t f) {
+    pa_assert(f >= 0);
+    pa_assert(f < PA_SAMPLE_MAX);
 
-    for (channel = 0; channel < nchannels; channel++)
-        linear[channel] = pa_sw_volume_to_linear(volume->values[channel]);
-
-    for (k = 0; k < nstreams; k++) {
-        for (channel = 0; channel < nchannels; channel++) {
-            pa_mix_info *m = streams + k;
-            linear_volume[k][channel] = (int32_t) lrint(pa_sw_volume_to_linear(m->volume.values[channel]) * linear[channel] * 0x10000);
-        }
-    }
+    return mix_table[f];
 }
 
-static void calc_linear_float_stream_volumes(pa_mix_info streams[], float linear_volume[][PA_CHANNELS_MAX], unsigned nstreams, const pa_cvolume *volume) {
-    unsigned k, channel, nchannels;
-    double linear[PA_CHANNELS_MAX];
+void pa_set_mix_func(pa_sample_format_t f, pa_mix_func_t func) {
+    pa_assert(f >= 0);
+    pa_assert(f < PA_SAMPLE_MAX);
 
-    nchannels = volume->channels;
-
-    for (channel = 0; channel < nchannels; channel++)
-        linear[channel] = pa_sw_volume_to_linear(volume->values[channel]);
-
-    for (k = 0; k < nstreams; k++) {
-        for (channel = 0; channel < nchannels; channel++) {
-            pa_mix_info *m = streams + k;
-            linear_volume[k][channel] = (float) (pa_sw_volume_to_linear(m->volume.values[channel]) * linear[channel]);
-        }
-    }
+    mix_table[f] = func;
 }
 
 size_t pa_mix(
@@ -82,21 +78,24 @@ size_t pa_mix(
         const pa_cvolume *volume,
         pa_bool_t mute) {
 
+    pa_mix_func_t mix_func;
     pa_cvolume full_volume;
-    unsigned k;
+    unsigned k, c, nchannels;
 
-    void *stream_ptr[nstreams];
+    const void *stream_ptr[nstreams];
 
     pa_assert(streams);
     pa_assert(data);
     pa_assert(length);
     pa_assert(spec);
 
+    nchannels = spec->channels;
+
     if (!volume)
-        volume = pa_cvolume_reset(&full_volume, spec->channels);
+        volume = pa_cvolume_reset(&full_volume, nchannels);
 
     pa_assert(volume);
-    pa_assert(volume->channels == spec->channels);
+    pa_assert(volume->channels == nchannels);
 
     if (mute || pa_cvolume_is_muted(volume) || nstreams <= 0) {
         pa_silence_memory(data, length, spec);
@@ -110,127 +109,51 @@ size_t pa_mix(
         if (length > streams[k].chunk.length)
             length = streams[k].chunk.length;
 
+    mix_func = pa_get_mix_func(spec->format);
     switch (spec->format) {
 
-        case PA_SAMPLE_S16NE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s16ne_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S16RE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s16re_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S32NE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s32ne_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S32RE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s32re_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S24NE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s24ne_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S24RE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s24re_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S24_32NE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s24_32ne_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_S24_32RE: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_s24_32re_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_U8: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_u8_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
-        case PA_SAMPLE_ULAW: {
-            int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_ulaw_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
+        case PA_SAMPLE_S16NE:
+        case PA_SAMPLE_S16RE:
+        case PA_SAMPLE_S32NE:
+        case PA_SAMPLE_S32RE:
+        case PA_SAMPLE_S24NE:
+        case PA_SAMPLE_S24RE:
+        case PA_SAMPLE_S24_32NE:
+        case PA_SAMPLE_S24_32RE:
+        case PA_SAMPLE_U8:
+        case PA_SAMPLE_ULAW:
         case PA_SAMPLE_ALAW: {
             int32_t stream_linear_volume[nstreams][PA_CHANNELS_MAX];
 
-            calc_linear_integer_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_alaw_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
+            for (k = 0; k < nstreams; k++) {
+                for (c = 0; c < nchannels; c++) {
+                    stream_linear_volume[k][c] = (int32_t) lrint(pa_sw_volume_to_linear(streams[k].volume.values[c]) *
+                                                                 pa_sw_volume_to_linear(volume->values[c]) * 0x10000);
+                }
+            }
+
+            mix_func(stream_linear_volume, nstreams, nchannels, stream_ptr, data, length);
 
             break;
         }
 
-        case PA_SAMPLE_FLOAT32NE: {
-            float stream_linear_volume[nstreams][PA_CHANNELS_MAX];
-
-            calc_linear_float_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_float32ne_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
-
-            break;
-        }
-
+        case PA_SAMPLE_FLOAT32NE:
         case PA_SAMPLE_FLOAT32RE: {
             float stream_linear_volume[nstreams][PA_CHANNELS_MAX];
 
-            calc_linear_float_stream_volumes(streams, stream_linear_volume, nstreams, volume);
-            mix_float32re_c(stream_linear_volume, nstreams, spec->channels, stream_ptr, data, length);
+            for (k = 0; k < nstreams; k++) {
+                for (c = 0; c < nchannels; c++) {
+                    stream_linear_volume[k][c] = (float) (pa_sw_volume_to_linear(streams[k].volume.values[c]) *
+                                                          pa_sw_volume_to_linear(volume->values[c]));
+                }
+            }
+
+            mix_func(stream_linear_volume, nstreams, nchannels, stream_ptr, data, length);
 
             break;
         }
 
         default:
-            pa_log_error("Unable to mix audio data of format %s.", pa_sample_format_to_string(spec->format));
             pa_assert_not_reached();
     }
 
