@@ -38,40 +38,90 @@
 
 #include "cpu-orc.h"
 
-static pa_mix_func_t fallback_float;
+static pa_mix_func_t fallback_s16, fallback_float;
 
-static void mix_float32ne_orc(float stream_volume[][PA_CHANNELS_MAX], unsigned nstreams, unsigned nchannels, const void *src[], void *dest, size_t length) {
+static void mix_s16ne_orc(int32_t volume[][PA_CHANNELS_MAX], unsigned nstreams, unsigned nchannels, const void *src[], void *dest, size_t length) {
     if (nchannels == 1) {
+        if (nstreams == 1)
+            pa_mix_s16_mono_1_orc(dest, src[0], volume[0][0], length/2);
+        else if (nstreams == 3)
+            pa_mix_s16_mono_3_orc(dest, src[0], src[1], src[2], volume[0][0], volume[1][0], volume[2][0], length/2);
+
+else
+  fallback_s16(volume, nstreams, nchannels, src, dest, length);
+/*
         if (nstreams % 4 == 1)
-            pa_mix_float_mono_1_orc(dest, src[0], stream_volume[0][0], length/4);
+            pa_mix_s16_mono_1_orc(dest, src[0], volume[0][0], length/2);
         else if (nstreams % 4 == 2)
-            pa_mix_float_mono_2_orc(dest, src[0], src[1], stream_volume[0][0], stream_volume[1][0], length/4);
+            pa_mix_s16_mono_2_orc(dest, src[0], src[1], volume[0][0], volume[1][0], length/2);
         else if (nstreams % 4 == 3)
-            pa_mix_float_mono_3_orc(dest, src[0], src[1], src[2], stream_volume[0][0], stream_volume[1][0], stream_volume[2][0], length/4);
+            pa_mix_s16_mono_3_orc(dest, src[0], src[1], src[2], volume[0][0], volume[1][0], volume[2][0], length/2);
         else if (nstreams % 4 == 0)
-            pa_mix_float_mono_4_orc(dest, src[0], src[1], src[2], src[3], stream_volume[0][0], stream_volume[1][0], stream_volume[2][0], stream_volume[3][0], length/4);
+            pa_mix_s16_mono_4_orc(dest, src[0], src[1], src[2], src[3], volume[0][0], volume[1][0], volume[2][0], volume[3][0], length/2);
 
         for (unsigned n = (nstreams-1) % 4; n+4 < nstreams; n += 4) {
-            pa_mix_float_mono_add4_orc(dest, src[n+1], src[n+2], src[n+3], src[n+4], stream_volume[n+1][0], stream_volume[n+2][0], stream_volume[n+3][0], stream_volume[n+4][0], length/4);
+            pa_mix_s16_mono_add4_orc(dest, src[n+1], src[n+2], src[n+3], src[n+4], volume[n+1][0], volume[n+2][0], volume[n+3][0], volume[n+4][0], length/2);
+        }
+*/
+/*
+    } else if (nchannels == 2) {
+        pa_assert((size_t) dest % (2*sizeof(int16_t)) == 0);
+        if (nstreams % 4 == 1)
+            pa_mix_s16_stereo_1_orc(dest, src[0], ((int64_t *) volume[0])[0], length/4);
+        else if (nstreams % 4 == 2)
+            pa_mix_s16_stereo_2_orc(dest, src[0], src[1], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], length/4);
+        else if (nstreams % 4 == 3)
+            pa_mix_s16_stereo_3_orc(dest, src[0], src[1], src[2], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], ((int64_t *) volume[2])[0], length/4);
+        else if (nstreams % 4 == 0)
+            pa_mix_s16_stereo_4_orc(dest, src[0], src[1], src[2], src[3], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], ((int64_t *) volume[2])[0], ((int64_t *) volume[3])[0], length/4);
+
+        for (unsigned n = (nstreams-1) % 4; n+4 < nstreams; n += 4) {
+            pa_mix_s16_stereo_add4_orc(dest, src[n+1], src[n+2], src[n+3], src[n+4], ((int64_t *) volume[n+1])[0], ((int64_t *) volume[n+2])[0], ((int64_t *) volume[n+3])[0], ((int64_t *) volume[n+4])[0], length/4);
+        }
+*/
+    } else {
+        fallback_s16(volume, nstreams, nchannels, src, dest, length);
+    }
+}
+
+static void mix_float32ne_orc(float volume[][PA_CHANNELS_MAX], unsigned nstreams, unsigned nchannels, const void *src[], void *dest, size_t length) {
+    if (nchannels == 1) {
+        if (nstreams % 4 == 1)
+            pa_mix_float_mono_1_orc(dest, src[0], volume[0][0], length/4);
+        else if (nstreams % 4 == 2)
+            pa_mix_float_mono_2_orc(dest, src[0], src[1], volume[0][0], volume[1][0], length/4);
+        else if (nstreams % 4 == 3)
+            pa_mix_float_mono_3_orc(dest, src[0], src[1], src[2], volume[0][0], volume[1][0], volume[2][0], length/4);
+        else if (nstreams % 4 == 0)
+            pa_mix_float_mono_4_orc(dest, src[0], src[1], src[2], src[3], volume[0][0], volume[1][0], volume[2][0], volume[3][0], length/4);
+
+        for (unsigned n = (nstreams-1) % 4; n+4 < nstreams; n += 4) {
+            pa_mix_float_mono_add4_orc(dest, src[n+1], src[n+2], src[n+3], src[n+4], volume[n+1][0], volume[n+2][0], volume[n+3][0], volume[n+4][0], length/4);
         }
     } else if (nchannels == 2) {
-        if (nstreams == 2) {
+        pa_assert((size_t) dest % (2*sizeof(float)) == 0);
+        if (nstreams % 4 == 1)
+            pa_mix_float_stereo_1_orc(dest, src[0], ((int64_t *) volume[0])[0], length/8);
+        else if (nstreams % 4 == 2)
+            pa_mix_float_stereo_2_orc(dest, src[0], src[1], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], length/8);
+        else if (nstreams % 4 == 3)
+            pa_mix_float_stereo_3_orc(dest, src[0], src[1], src[2], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], ((int64_t *) volume[2])[0], length/8);
+        else if (nstreams % 4 == 0)
+            pa_mix_float_stereo_4_orc(dest, src[0], src[1], src[2], src[3], ((int64_t *) volume[0])[0], ((int64_t *) volume[1])[0], ((int64_t *) volume[2])[0], ((int64_t *) volume[3])[0], length/8);
 
-            int64_t v1 = ((int64_t *) stream_volume)[0];
-            int64_t v2 = ((int64_t *) stream_volume)[PA_CHANNELS_MAX/2];
-
-            pa_mix_float_stereo_2_orc(dest, src[0], src[1], v1, v2, length/8);
-
-        } else {
-            fallback_float(stream_volume, nstreams, nchannels, src, dest, length);
+        for (unsigned n = (nstreams-1) % 4; n+4 < nstreams; n += 4) {
+            pa_mix_float_stereo_add4_orc(dest, src[n+1], src[n+2], src[n+3], src[n+4], ((int64_t *) volume[n+1])[0], ((int64_t *) volume[n+2])[0], ((int64_t *) volume[n+3])[0], ((int64_t *) volume[n+4])[0], length/8);
         }
     } else {
-        fallback_float(stream_volume, nstreams, nchannels, src, dest, length);
+        fallback_float(volume, nstreams, nchannels, src, dest, length);
     }
 }
 
 void pa_mix_func_init_orc(void) {
     pa_log_info("Initialising ORC optimized mix functions.");
+
+    fallback_s16 = pa_get_mix_func(PA_SAMPLE_S16NE);
+    pa_set_mix_func(PA_SAMPLE_S16NE, (pa_mix_func_t) mix_s16ne_orc);
 
     fallback_float = pa_get_mix_func(PA_SAMPLE_FLOAT32NE);
     pa_set_mix_func(PA_SAMPLE_FLOAT32NE, (pa_mix_func_t) mix_float32ne_orc);
